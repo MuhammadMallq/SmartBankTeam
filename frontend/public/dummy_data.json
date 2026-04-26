@@ -1,0 +1,58 @@
+{
+  "user": {
+    "name": "Budi Santoso",
+    "id": "USR-00142",
+    "email": "budi@smartbank.local",
+    "password": "SmartBank2026!"
+  },
+  "dashboard": {
+    "balance": 47350,
+    "dailyTransactions": {
+      "used": 8,
+      "max": 10,
+      "remaining": 2
+    },
+    "activeLoan": {
+      "amount": 50000,
+      "info": "Bunga 10% • 4 minggu"
+    },
+    "monthlyFee": {
+      "amount": 3850,
+      "info": "Fee bank + pajak + gateway"
+    },
+    "history": [
+      {
+        "id": "MKT-8821",
+        "title": "Checkout Marketplace",
+        "app": "PasarKita",
+        "time": "10:32 • Hari ini",
+        "status": "Sukses",
+        "amount": -25500
+      },
+      {
+        "id": "USR-00089",
+        "title": "Transfer Masuk",
+        "app": "SmartBank",
+        "time": "09:14 • Hari ini",
+        "status": "Sukses",
+        "amount": 15000
+      },
+      {
+        "id": "MKT-8821",
+        "title": "Ongkir LogistiKita",
+        "app": "LogistiKita",
+        "time": "10:35 • Hari ini",
+        "status": "Sukses",
+        "amount": -5000
+      },
+      {
+        "id": "POS-441",
+        "title": "Transaksi POS",
+        "app": "WarungPOS",
+        "time": "14:20 • Kemarin",
+        "status": "Sukses",
+        "amount": -12000
+      }
+    ]
+  }
+}
