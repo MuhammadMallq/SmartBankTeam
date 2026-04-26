@@ -1,10 +1,21 @@
+# Dependencies
 node_modules/
+bower_components
+.psci_modules
+.spago
+
+# IDEs
 .vscode/
 .idea/
 .DS_Store
+
+# Build/Generated
 dist/
 dist-ssr/
-*.local
+output
+.psci
+
+# Logs
 logs
 *.log
 npm-debug.log*
@@ -12,3 +23,6 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+
+# Environment
+*.local
