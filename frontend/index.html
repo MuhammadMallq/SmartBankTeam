@@ -1,13 +1,243 @@
 <!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SmartBank - Login</title>
-  </head>
-  <body>
-    <div id="app-auth"></div>
-    <script type="module" src="/src/login.js"></script>
-  </body>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SmartBank - Home
+  
+  </title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- FontAwesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <!-- SmartBank Styles -->
+  <link rel="stylesheet" href="/src/styles/style.css">
+  <link rel="stylesheet" href="/src/pages/landing/landing.css">
+</head>
+
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="/" class="brand-logo">
+        <i class="fa-solid fa-building-columns"></i>
+        <span>SmartBank</span>
+      </a>
+      <div class="nav-menu" id="navMenu">
+        <a href="#" class="nav-link active"><i class="fa-solid fa-house"></i> Home</a>
+        <a href="#layanan" class="nav-link"><i class="fa-solid fa-handshake"></i> Layanan</a>
+        <a href="#berita" class="nav-link"><i class="fa-solid fa-newspaper"></i> Berita</a>
+        <a href="#tentang" class="nav-link"><i class="fa-solid fa-circle-info"></i> Tentang Kami</a>
+        <div class="mobile-auth-buttons">
+          <a href="/login.html" class="btn btn-outline">Masuk</a>
+          <a href="/register.html" class="btn btn-primary">Daftar</a>
+        </div>
+      </div>
+      <div class="nav-auth">
+        <a href="/login.html" class="btn btn-outline">Masuk</a>
+        <a href="/register.html" class="btn btn-primary">Daftar</a>
+        <button class="mobile-toggle" id="mobileToggle">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <span class="hero-badge">Bank Pilihan Keluarga Indonesia</span>
+      <h1 class="hero-title">Wujudkan Stabilitas Finansial Bersama SmartBank</h1>
+      <p class="hero-subtitle">Kami hadir dengan komitmen untuk menjaga stabilitas moneter dan memberikan layanan
+        perbankan yang aman, tepercaya, dan inovatif bagi seluruh lapisan masyarakat.</p>
+      <div class="hero-cta">
+        <a href="/register.html" class="btn btn-primary btn-large">Buka Rekening</a>
+        <a href="#layanan" class="btn btn-outline btn-large white">Pelajari Layanan</a>
+      </div>
+    </div>
+    <!-- Statistics Bar -->
+    <div class="stats-bar">
+      <div class="stat-item">
+        <h3 class="stat-value">5M+</h3>
+        <p class="stat-label">Nasabah Aktif</p>
+      </div>
+      <div class="stat-item">
+        <h3 class="stat-value">Rp 100M+</h3>
+        <p class="stat-label">Total Aset</p>
+      </div>
+      <div class="stat-item">
+        <h3 class="stat-value">24/7</h3>
+        <p class="stat-label">Layanan Digital</p>
+      </div>
+      <div class="stat-item">
+        <h3 class="stat-value">99.9%</h3>
+        <p class="stat-label">Keamanan Sistem</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Info Banner (Tingkat Suku Bunga) -->
+  <section class="info-banner">
+    <div class="info-container">
+      <div class="info-text">
+        <i class="fa-solid fa-chart-line info-icon"></i>
+        <div>
+          <strong>BI-Rate Terkini: 6.00%</strong>
+          <span> (Berlaku efektif sejak bulan ini). Dapatkan suku bunga deposito terbaik di SmartBank.</span>
+        </div>
+      </div>
+      <a href="#" class="info-link">Lihat Detail <i class="fa-solid fa-arrow-right"></i></a>
+    </div>
+  </section>
+
+  <!-- Layanan Section -->
+  <section id="layanan" class="services">
+    <div class="section-header">
+      <h2 class="section-title">Layanan Utama</h2>
+      <div class="section-line"></div>
+      <p class="section-desc">Solusi finansial komprehensif untuk memenuhi berbagai kebutuhan ekonomi Anda, didukung
+        oleh teknologi terdepan.</p>
+    </div>
+
+    <div class="services-grid">
+      <div class="service-card">
+        <div class="service-icon"><i class="fa-solid fa-wallet"></i></div>
+        <h3 class="service-title">Simpanan & Deposito</h3>
+        <p class="service-desc">Nikmati keamanan dana dengan tingkat suku bunga kompetitif dan fleksibilitas penarikan
+          untuk berbagai jangka waktu.</p>
+        <a href="#" class="service-link">Selengkapnya</a>
+      </div>
+      <div class="service-card">
+        <div class="service-icon"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+        <h3 class="service-title">Kredit Pembiayaan</h3>
+        <p class="service-desc">Solusi kredit untuk individu maupun UMKM dengan proses cepat, transparan, dan bunga yang
+          terjangkau.</p>
+        <a href="#" class="service-link">Selengkapnya</a>
+      </div>
+      <div class="service-card">
+        <div class="service-icon"><i class="fa-solid fa-mobile-screen-button"></i></div>
+        <h3 class="service-title">Digital Banking</h3>
+        <p class="service-desc">Akses layanan perbankan kapan saja dan di mana saja melalui aplikasi mobile dan internet
+          banking yang aman.</p>
+        <a href="#" class="service-link">Selengkapnya</a>
+      </div>
+      <div class="service-card">
+        <div class="service-icon"><i class="fa-solid fa-globe"></i></div>
+        <h3 class="service-title">Transaksi Valas</h3>
+        <p class="service-desc">Layanan jual beli valuta asing dengan nilai tukar real-time yang kompetitif untuk
+          kebutuhan bisnis internasional.</p>
+        <a href="#" class="service-link">Selengkapnya</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Berita & Publikasi -->
+  <section id="berita" class="news">
+    <div class="section-header">
+      <h2 class="section-title">Berita & Publikasi Terkini</h2>
+      <div class="section-line"></div>
+    </div>
+
+    <div class="news-grid">
+      <article class="news-card">
+        <div class="news-img bg-blue-1"></div>
+        <div class="news-content">
+          <span class="news-date">10 Mei 2026</span>
+          <h3 class="news-title">Stabilitas Nilai Tukar Rupiah Terjaga di Tengah Ketidakpastian Global</h3>
+          <p class="news-excerpt">Kebijakan moneter pro-stability terus dioptimalkan guna mengendalikan inflasi dan
+            mendukung pertumbuhan ekonomi...</p>
+          <a href="#" class="news-readmore">Baca Selengkapnya</a>
+        </div>
+      </article>
+      <article class="news-card">
+        <div class="news-img bg-blue-2"></div>
+        <div class="news-content">
+          <span class="news-date">08 Mei 2026</span>
+          <h3 class="news-title">Perluasan Akses Keuangan Digital Melalui QRIS Antarnegara</h3>
+          <p class="news-excerpt">SmartBank mendukung penuh inisiatif perluasan transaksi lintas negara guna
+            memfasilitasi kemudahan UMKM dan pariwisata...</p>
+          <a href="#" class="news-readmore">Baca Selengkapnya</a>
+        </div>
+      </article>
+      <article class="news-card">
+        <div class="news-img bg-blue-3"></div>
+        <div class="news-content">
+          <span class="news-date">05 Mei 2026</span>
+          <h3 class="news-title">Peluncuran Layanan SmartBank Prioritas Generasi Terbaru</h3>
+          <p class="news-excerpt">Kami menghadirkan berbagai privilese eksklusif dan layanan penasihat keuangan personal
+            untuk nasabah prioritas...</p>
+          <a href="#" class="news-readmore">Baca Selengkapnya</a>
+        </div>
+      </article>
+    </div>
+    <div class="news-center-btn">
+      <a href="#" class="btn btn-outline">Lihat Semua Berita</a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-top">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="brand-logo footer-logo">
+            <i class="fa-solid fa-building-columns"></i>
+            <span>SmartBank</span>
+          </div>
+          <p class="footer-desc">Menjadi bank sentral digital terdepan yang berkontribusi nyata terhadap perekonomian
+            nasional dan kesejahteraan masyarakat Indonesia.</p>
+          <div class="social-links">
+            <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
+            <a href="#"><i class="fa-brands fa-twitter"></i></a>
+            <a href="#"><i class="fa-brands fa-instagram"></i></a>
+            <a href="#"><i class="fa-brands fa-youtube"></i></a>
+            <a href="#"><i class="fa-brands fa-linkedin-in"></i></a>
+          </div>
+        </div>
+        <div class="footer-links">
+          <h4 class="footer-title">Tentang</h4>
+          <ul>
+            <li><a href="#">Profil Perusahaan</a></li>
+            <li><a href="#">Dewan Direksi</a></li>
+            <li><a href="#">Karir</a></li>
+            <li><a href="#">Tata Kelola</a></li>
+          </ul>
+        </div>
+        <div class="footer-links">
+          <h4 class="footer-title">Layanan</h4>
+          <ul>
+            <li><a href="#">Individu</a></li>
+            <li><a href="#">Bisnis & Korporasi</a></li>
+            <li><a href="#">Wealth Management</a></li>
+            <li><a href="#">E-Banking</a></li>
+          </ul>
+        </div>
+        <div class="footer-contact">
+          <h4 class="footer-title">Hubungi Kami</h4>
+          <ul>
+            <li><i class="fa-solid fa-phone"></i> 1500-123 (Call Center)</li>
+            <li><i class="fa-solid fa-envelope"></i> contact@smartbank.co.id</li>
+            <li><i class="fa-solid fa-location-dot"></i> Jl. Sariasih No. 54 Sarijadi, Kec. Sukasari, Kota Bandung 40151, Indonesia</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 SmartBank Indonesia. Hak Cipta Dilindungi Undang-Undang.</p>
+      <div class="footer-bottom-links">
+        <a href="#">Syarat & Ketentuan</a>
+        <a href="#">Kebijakan Privasi</a>
+        <a href="#">Peta Situs</a>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="/src/pages/landing/landing.js"></script>
+</body>
+
 </html>

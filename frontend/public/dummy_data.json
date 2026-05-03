@@ -5,6 +5,24 @@
     "email": "budi@smartbank.local",
     "password": "SmartBank2026!"
   },
+  "admin": {
+    "name": "Super Admin",
+    "id": "ADM-001",
+    "email": "admin@smartbank.local",
+    "password": "AdminSmartBank!"
+  },
+  "manager": {
+    "name": "Manager Ops",
+    "id": "MGR-007",
+    "email": "manager@smartbank.local",
+    "password": "ManagerSmartBank!"
+  },
+  "teller": {
+    "name": "Bank Teller",
+    "id": "TLR-01",
+    "email": "teller@smartbank.local",
+    "password": "TellerSmartBank!"
+  },
   "dashboard": {
     "balance": 47350,
     "dailyTransactions": {

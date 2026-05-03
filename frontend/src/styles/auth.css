@@ -3,6 +3,7 @@
 :root {
   --primary: #2563eb;
   --primary-hover: #1d4ed8;
+  --primary-soft: rgba(37, 99, 235, 0.1);
   --bg-color: #f8fafc;
   --card-bg: #ffffff;
   --text-main: #0f172a;
@@ -10,7 +11,8 @@
   --border-color: #e2e8f0;
   --input-bg: #ffffff;
   --font-family: 'Outfit', sans-serif;
-  --transition: all 0.3s ease;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --shadow-premium: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 body {
@@ -109,6 +111,7 @@ body {
   padding: 0 64px;
   box-shadow: -10px 0 30px rgba(0,0,0,0.05);
   z-index: 10;
+  position: relative;
 }
 
 .auth-container {
@@ -277,13 +280,14 @@ body {
   color: var(--primary-hover);
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .auth-hero {
     display: none;
   }
   .auth-form-side {
     max-width: 100%;
-    padding: 24px;
+    padding: 40px 24px;
+    justify-content: flex-start;
   }
 }
 
@@ -327,4 +331,73 @@ body {
 
 .toast-icon {
   font-size: 18px;
+}
+
+/* Back to Home Button */
+.back-home-btn {
+  position: absolute;
+  top: 2rem;
+  left: 2rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: var(--transition);
+  z-index: 50;
+}
+
+.back-home-btn:hover {
+  color: var(--primary);
+}
+
+@media (max-width: 1024px) {
+  .back-home-btn {
+    position: relative;
+    top: 0;
+    left: 0;
+    margin-bottom: 2rem;
+    display: inline-flex;
+  }
+}
+
+/* Register Theme Modifications */
+.auth-wrapper.register-theme {
+  flex-direction: row-reverse;
+}
+
+.auth-wrapper.register-theme .auth-hero {
+  background: linear-gradient(135deg, #003366 0%, #001a33 100%);
+}
+
+.auth-wrapper.register-theme .auth-hero::before {
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.3) 0%, transparent 70%);
+}
+
+.auth-wrapper.register-theme .auth-hero::after {
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+}
+
+.auth-wrapper.register-theme .auth-form button {
+  background: #D4AF37;
+  color: #fff;
+}
+
+.auth-wrapper.register-theme .auth-form button:hover {
+  background: #b5952f;
+}
+
+.auth-wrapper.register-theme .auth-footer a {
+  color: #D4AF37;
+}
+
+.auth-wrapper.register-theme .auth-footer a:hover {
+  color: #b5952f;
+}
+
+.auth-wrapper.register-theme .auth-form input:focus {
+  border-color: #D4AF37;
+  box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1);
 }
