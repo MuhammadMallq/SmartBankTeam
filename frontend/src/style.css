@@ -1125,3 +1125,460 @@ svg { display: block; flex-shrink: 0; }
   color: var(--slate-400);
   text-align: center;
 }
+
+/* ─── PAGE SUBTITLE ────────────────────────────────────────────────────────── */
+.page-subtitle {
+  font-size: 13px;
+  color: var(--slate-500);
+  margin: -14px 0 20px 0;
+  line-height: 1.5;
+}
+
+/* ─── LEDGER & FEE SUMMARY CARDS ───────────────────────────────────────────── */
+.ldg-summary-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.ldg-summary-card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.ldg-summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.ldg-summary-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ldg-summary-icon svg { width: 20px; height: 20px; }
+.ldg-summary-icon.blue  { background: var(--blue-50);  color: var(--blue-600); }
+.ldg-summary-icon.slate { background: var(--slate-100); color: var(--slate-600); }
+.ldg-summary-icon.amber { background: var(--amber-50); color: var(--amber-700); }
+.ldg-summary-icon.red   { background: var(--red-50);   color: var(--red-600);  }
+
+.ldg-summary-label {
+  font-size: 11px;
+  color: var(--slate-500);
+  font-weight: 500;
+  margin-bottom: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.ldg-summary-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--slate-900);
+  letter-spacing: -0.3px;
+}
+
+/* ─── FILTER BAR ───────────────────────────────────────────────────────────── */
+.ldg-filter-bar {
+  background: white;
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.ldg-search-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+}
+
+.ldg-search-wrap svg {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 15px;
+  height: 15px;
+  color: var(--slate-400);
+  pointer-events: none;
+}
+
+.ldg-search-wrap input {
+  width: 100%;
+  padding: 9px 12px 9px 34px;
+  border: 1px solid var(--slate-200);
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: var(--font-family);
+  color: var(--slate-700);
+  background: var(--slate-50);
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.ldg-search-wrap input:focus {
+  border-color: var(--blue-600);
+  background: white;
+  box-shadow: 0 0 0 3px var(--blue-50);
+}
+
+.ldg-filter-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.ldg-chip {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--slate-200);
+  background: white;
+  color: var(--slate-600);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-family);
+}
+
+.ldg-chip:hover { border-color: var(--blue-200); color: var(--blue-600); }
+
+.ldg-chip.active {
+  background: var(--blue-600);
+  border-color: var(--blue-600);
+  color: white;
+}
+
+.ldg-export-btn {
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+/* ─── LEDGER TABLE ─────────────────────────────────────────────────────────── */
+.ldg-table-card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.ldg-table-wrap {
+  overflow-x: auto;
+}
+
+.ldg-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.ldg-table thead th {
+  text-align: left;
+  padding: 10px 10px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--slate-400);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--slate-100);
+  white-space: nowrap;
+  background: var(--slate-50);
+}
+
+.ldg-table thead th:first-child { border-radius: 8px 0 0 0; }
+.ldg-table thead th:last-child  { border-radius: 0 8px 0 0; }
+
+.ldg-table tbody td {
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--slate-50);
+  color: var(--slate-700);
+  vertical-align: middle;
+}
+
+.ldg-row { transition: background 0.15s; }
+.ldg-row:hover { background: var(--slate-50); }
+
+.ldg-cell-id {
+  font-family: 'SF Mono', 'Consolas', monospace;
+  font-size: 11px;
+  color: var(--slate-500);
+  font-weight: 500;
+}
+
+.ldg-cell-time { white-space: nowrap; }
+.ldg-time-sub { font-size: 11px; color: var(--slate-400); margin-top: 1px; }
+
+.ldg-cell-desc {
+  font-weight: 500;
+  color: var(--slate-800);
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ldg-cell-app { color: var(--slate-500); font-size: 12px; }
+
+.ldg-cell-amount { font-weight: 700; white-space: nowrap; }
+.ldg-cell-amount.debit  { color: var(--slate-800); }
+.ldg-cell-amount.credit { color: var(--green-700); }
+
+.ldg-cell-fee { color: var(--slate-500); font-size: 12px; }
+.ldg-cell-balance { font-weight: 600; color: var(--slate-800); white-space: nowrap; }
+
+.ldg-type-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.ldg-type-badge.debit  { background: var(--slate-100); color: var(--slate-600); }
+.ldg-type-badge.credit { background: var(--green-50);  color: var(--green-700); }
+
+.ldg-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.ldg-badge.success { background: var(--green-100); color: var(--green-700); }
+.ldg-badge.failed  { background: var(--red-50);    color: var(--red-700);   }
+.ldg-badge.pending { background: var(--amber-50);  color: var(--amber-700); }
+
+.ldg-detail-btn {
+  background: none;
+  border: none;
+  color: var(--slate-300);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.2s;
+  font-family: var(--font-family);
+}
+
+.ldg-detail-btn:hover { background: var(--slate-50); color: var(--blue-600); }
+
+.ldg-empty {
+  text-align: center;
+  color: var(--slate-400);
+  padding: 40px 20px !important;
+  font-size: 14px;
+}
+
+/* Ledger Pagination */
+.ldg-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--slate-100);
+}
+
+.ldg-pagination-info { font-size: 11px; color: var(--slate-400); }
+.ldg-pages { display: flex; gap: 5px; align-items: center; }
+
+/* ─── LEDGER DETAIL MODAL ──────────────────────────────────────────────────── */
+.ldg-detail-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ldg-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+}
+
+.ldg-detail-label {
+  color: var(--slate-500);
+  font-weight: 500;
+}
+
+.ldg-detail-value {
+  color: var(--slate-800);
+  font-weight: 500;
+  text-align: right;
+}
+
+.ldg-mono {
+  font-family: 'SF Mono', 'Consolas', monospace;
+  font-size: 12px;
+}
+
+.ldg-detail-divider {
+  height: 1px;
+  background: var(--slate-100);
+  margin: 4px 0;
+}
+
+/* ─── BIAYA LAYANAN MID ROW ────────────────────────────────────────────────── */
+.fee-mid-row {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.fee-chart-card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  box-shadow: var(--shadow-sm);
+}
+
+.fee-chart-legend {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--slate-500);
+  margin: 8px 0 14px;
+}
+
+.fee-chart-legend span { display: flex; align-items: center; gap: 5px; }
+
+.fee-bar-chart {
+  height: 160px;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 0 4px;
+}
+
+.fee-bar-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+}
+
+.fee-bar-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  gap: 2px;
+}
+
+.fee-bar {
+  border-radius: 4px 4px 0 0;
+  min-height: 4px;
+  transition: opacity 0.2s;
+}
+
+.fee-bar.bank { background: var(--blue-600); }
+.fee-bar.tax  { background: var(--amber-500); }
+
+/* ─── FEE SIMULATOR ────────────────────────────────────────────────────────── */
+.fee-sim-card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  box-shadow: var(--shadow-sm);
+}
+
+.fee-sim-sub {
+  font-size: 12px;
+  color: var(--slate-500);
+  margin: 4px 0 16px;
+}
+
+.fee-sim-input-wrap { margin-bottom: 16px; }
+
+.fee-sim-input-wrap label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--slate-600);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.fee-sim-input-wrap input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--slate-200);
+  border-radius: var(--radius-sm);
+  font-size: 16px;
+  font-weight: 600;
+  font-family: var(--font-family);
+  color: var(--slate-900);
+  outline: none;
+  transition: border-color 0.2s;
+  background: var(--slate-50);
+}
+
+.fee-sim-input-wrap input:focus {
+  border-color: var(--blue-600);
+  background: white;
+  box-shadow: 0 0 0 3px var(--blue-50);
+}
+
+.fee-sim-results {
+  background: var(--slate-50);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fee-sim-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: var(--slate-600);
+}
+
+.fee-sim-row.total {
+  font-weight: 700;
+  color: var(--slate-900);
+}
+
+.fee-sim-val { font-weight: 600; }
+
+.fee-sim-divider {
+  height: 1px;
+  background: var(--slate-200);
+  margin: 2px 0;
+}
+
+/* ─── RESPONSIVE ───────────────────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .ldg-summary-row { grid-template-columns: repeat(2, 1fr); }
+  .fee-mid-row { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  .ldg-summary-row { grid-template-columns: 1fr; }
+  .ldg-filter-bar { flex-direction: column; align-items: stretch; }
+  .ldg-export-btn { margin-left: 0; }
+}
