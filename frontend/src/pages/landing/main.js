@@ -1,4 +1,6 @@
 import '../../styles/style.css';
+import { renderLedgerPage, bindLedgerEvents } from '../../ledger.js';
+import { renderBiayaLayananPage, bindBiayaLayananEvents } from '../../biaya-layanan.js';
 
 // ─── SVG Icons ────────────────────────────────────────────────────────────────
 const ic = {
@@ -22,17 +24,122 @@ const formatRpDynamic = formatRp;
 let appState = null;
 let isCooldown = false;
 let selectedContact = null;
+let currentPage = 'dashboard';
 
 // ─── Bootstrap ────────────────────────────────────────────────────────────────
 async function bootstrap() {
   try {
     const res = await fetch('/dummy_data.json');
     appState = await res.json();
-    renderDashboardUI();
+    renderApp();
   } catch (e) {
     document.querySelector('#app').innerHTML = '<h2 style="padding:40px">Gagal memuat data.</h2>';
     console.error(e);
   }
+}
+
+function navigateTo(page) {
+  currentPage = page;
+  renderApp();
+}
+
+function renderApp() {
+  if (currentPage === 'dashboard') {
+    renderDashboardUI();
+  } else if (currentPage === 'ledger') {
+    renderShellPage(renderLedgerPage(appState));
+    bindLedgerEvents(appState, renderApp, openModal, closeModal);
+  } else if (currentPage === 'biaya') {
+    renderShellPage(renderBiayaLayananPage(appState));
+    bindBiayaLayananEvents(appState, renderApp);
+  }
+}
+
+function renderShellPage(pageContent) {
+  const data = appState;
+  document.querySelector('#app').innerHTML = `
+  <div class="dashboard-layout fade-in">
+    ${renderSidebar(data)}
+    <div class="main-area">
+      ${renderTopnav(data)}
+      <div class="page-content">${pageContent}</div>
+    </div>
+  </div>
+  ${renderLogoutModal()}
+  `;
+  bindShellEvents();
+}
+
+function renderSidebar(data) {
+  return `
+    <aside class="sidebar">
+      <div class="sidebar-logo">${ic.bank}</div>
+      <nav class="sidebar-menu">
+        <a href="#" class="menu-item nav-link ${currentPage === 'dashboard' ? 'active' : ''}" data-page="dashboard" title="Dashboard">${ic.home}</a>
+        <a href="#" class="menu-item action-transfer" title="Transfer">${ic.transfer}</a>
+        <a href="#" class="menu-item" title="Pembayaran">${ic.payment}</a>
+        <a href="#" class="menu-item" title="Pinjaman">${ic.loan}</a>
+        <a href="#" class="menu-item nav-link ${currentPage === 'ledger' ? 'active' : ''}" data-page="ledger" title="Ledger">${ic.ledger}</a>
+        <a href="#" class="menu-item nav-link ${currentPage === 'biaya' ? 'active' : ''}" data-page="biaya" title="Biaya Layanan">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+        </a>
+        <a href="#" class="menu-item" title="Pengaturan">${ic.settings}</a>
+      </nav>
+      <div class="sidebar-bottom">
+        <a href="#" id="logoutBtn" class="menu-item" title="Keluar" style="color: var(--red-500);">${ic.logout}</a>
+        <div class="sidebar-user-avatar" title="${data.user.name}">${data.user.name.charAt(0)}</div>
+      </div>
+    </aside>`;
+}
+
+function renderTopnav(data) {
+  return `
+    <nav class="topnav">
+      <div class="topnav-brand">${ic.bank} SmartBank</div>
+      <div class="topnav-search">${ic.search}<input type="text" placeholder="Cari transaksi, fitur..." /></div>
+      <div class="topnav-actions">
+        <div class="topnav-icon-btn" title="Notifikasi">${ic.bell}<div class="notif-dot"></div></div>
+        <div class="topnav-user">
+          <div class="topnav-user-avatar">${data.user.name.charAt(0)}</div>
+          <span class="topnav-user-name">${data.user.name}</span>
+        </div>
+      </div>
+    </nav>`;
+}
+
+function renderLogoutModal() {
+  return `
+  <div id="modal-logout" class="modal-overlay">
+    <div class="modal-content" style="max-width:400px;text-align:center;">
+      <div class="modal-header">
+        <div style="background:var(--red-50);color:var(--red-600);width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px auto;">${ic.logout}</div>
+        <h2 style="font-size:19px;color:var(--slate-900);margin:0 0 4px;">Konfirmasi Keluar</h2>
+        <p style="color:var(--slate-500);font-size:13px;margin:0 0 24px;">Apakah Anda yakin ingin mengakhiri sesi?</p>
+      </div>
+      <div style="display:flex;gap:12px;">
+        <button type="button" class="btn-secondary" id="cancel-logout" style="flex:1;justify-content:center;">Kembali</button>
+        <button type="button" class="btn-primary" id="confirm-logout" style="flex:1;justify-content:center;background:var(--red-600);">Keluar Sistem</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function bindShellEvents() {
+  // Nav links
+  document.querySelectorAll('.nav-link').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      navigateTo(link.getAttribute('data-page'));
+    });
+  });
+  // Logout
+  document.getElementById('logoutBtn')?.addEventListener('click', (e) => { e.preventDefault(); openModal('modal-logout'); });
+  document.getElementById('cancel-logout')?.addEventListener('click', () => closeModal('modal-logout'));
+  document.getElementById('confirm-logout')?.addEventListener('click', (e) => {
+    e.target.textContent = 'Memutus koneksi...';
+    e.target.style.opacity = '0.7';
+    setTimeout(() => { window.location.href = '/'; }, 800);
+  });
 }
 
 // ─── Transfer Logic ───────────────────────────────────────────────────────────
@@ -241,11 +348,14 @@ function renderDashboardUI() {
     <aside class="sidebar">
       <div class="sidebar-logo">${ic.bank}</div>
       <nav class="sidebar-menu">
-        <a href="#" class="menu-item active" title="Dashboard">${ic.home}</a>
+        <a href="#" class="menu-item nav-link active" data-page="dashboard" title="Dashboard">${ic.home}</a>
         <a href="#" class="menu-item action-transfer" title="Transfer">${ic.transfer}</a>
         <a href="#" class="menu-item" title="Pembayaran">${ic.payment}</a>
         <a href="#" class="menu-item" title="Pinjaman">${ic.loan}</a>
-        <a href="#" class="menu-item" title="Ledger">${ic.ledger}</a>
+        <a href="#" class="menu-item nav-link" data-page="ledger" title="Ledger">${ic.ledger}</a>
+        <a href="#" class="menu-item nav-link" data-page="biaya" title="Biaya Layanan">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+        </a>
         <a href="#" class="menu-item" title="Pengaturan">${ic.settings}</a>
       </nav>
       <div class="sidebar-bottom">
@@ -546,6 +656,14 @@ function renderDashboardUI() {
     e.target.textContent = 'Memutus koneksi...';
     e.target.style.opacity = '0.7';
     setTimeout(() => { window.location.href = '/'; }, 800);
+  });
+
+  // Nav links for routing
+  document.querySelectorAll('.nav-link').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      navigateTo(link.getAttribute('data-page'));
+    });
   });
 
   document.querySelectorAll('.action-transfer').forEach(btn => {
