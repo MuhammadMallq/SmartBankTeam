@@ -1709,14 +1709,808 @@ svg { display: block; flex-shrink: 0; }
   margin: 2px 0;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/* ─── PEMBAYARAN (PAYMENT) PAGE ────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+.pay-categories-card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 22px;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 16px;
+}
+
+.pay-cat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.pay-cat-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 12px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--slate-100);
+  background: var(--white);
+  cursor: pointer;
+  transition: all 0.25s;
+  font-family: var(--font-family);
+}
+
+.pay-cat-btn:hover {
+  border-color: var(--blue-200);
+  background: var(--blue-50);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.pay-cat-btn.active {
+  border-color: var(--blue-600);
+  background: var(--blue-50);
+  box-shadow: 0 0 0 3px var(--blue-50);
+}
+
+.pay-cat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+
+.pay-cat-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--slate-700);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/* ─── PINJAMAN (LOAN) PAGE ─────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Tabs */
+.loan-tabs {
+  display: flex;
+  gap: 4px;
+  background: white;
+  border-radius: var(--radius-sm);
+  padding: 5px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--slate-100);
+}
+
+.loan-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: 9px;
+  border: none;
+  background: transparent;
+  color: var(--slate-500);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.loan-tab svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.loan-tab:hover {
+  background: var(--slate-50);
+  color: var(--slate-700);
+}
+
+.loan-tab.active {
+  background: var(--blue-600);
+  color: white;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
+
+/* Detail Row */
+.loan-detail-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* Active Loan Card */
+.loan-active-card {
+  background: linear-gradient(135deg, var(--blue-700), var(--blue-800));
+  border-radius: var(--radius);
+  padding: 24px;
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.loan-active-card::before {
+  content: '';
+  position: absolute;
+  top: -40px; right: -30px;
+  width: 140px; height: 140px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.loan-active-card::after {
+  content: '';
+  position: absolute;
+  bottom: -20px; left: -15px;
+  width: 80px; height: 80px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.loan-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.loan-card-id {
+  font-size: 13px;
+  opacity: 0.7;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.loan-card-rate {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  line-height: 1;
+}
+
+.loan-card-rate span {
+  font-size: 13px;
+  font-weight: 500;
+  opacity: 0.7;
+}
+
+.loan-card-amount {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  margin-bottom: 20px;
+  line-height: 1.1;
+}
+
+.loan-progress-section {
+  margin-bottom: 20px;
+}
+
+.loan-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.loan-progress-pct {
+  font-weight: 700;
+  font-size: 14px;
+  opacity: 1;
+}
+
+.loan-progress-bar {
+  width: 100%;
+  height: 8px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.loan-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #34d399, #22c55e);
+  border-radius: 10px;
+  transition: width 0.6s ease;
+}
+
+.loan-progress-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  opacity: 0.65;
+}
+
+.loan-card-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  border-top: 1px solid rgba(255,255,255,0.15);
+  padding-top: 16px;
+}
+
+.loan-meta-item label {
+  display: block;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.6;
+  margin-bottom: 3px;
+}
+
+.loan-meta-item span {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Installment Schedule */
+.loan-schedule-card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 22px;
+  box-shadow: var(--shadow-sm);
+}
+
+.loan-schedule-list {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.loan-inst-item {
+  display: flex;
+  gap: 14px;
+}
+
+.loan-inst-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  width: 28px;
+}
+
+.loan-inst-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.loan-inst-dot.done {
+  background: var(--green-100);
+  color: var(--green-700);
+}
+
+.loan-inst-dot.pending {
+  background: var(--slate-100);
+  color: var(--slate-500);
+  border: 2px solid var(--slate-200);
+}
+
+.loan-inst-dot svg {
+  width: 12px;
+  height: 12px;
+}
+
+.loan-inst-line {
+  width: 2px;
+  flex: 1;
+  min-height: 14px;
+  background: var(--slate-200);
+}
+
+.loan-inst-item.paid .loan-inst-line {
+  background: var(--green-200);
+}
+
+.loan-inst-info {
+  flex: 1;
+  padding-bottom: 16px;
+}
+
+.loan-inst-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.loan-inst-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--slate-800);
+}
+
+.loan-inst-details {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--slate-500);
+  margin-bottom: 2px;
+}
+
+.loan-inst-breakdown {
+  font-size: 11px;
+  color: var(--slate-400);
+}
+
+/* Loan Simulator */
+.loan-sim-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.loan-sim-form-card,
+.loan-sim-result-card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 22px;
+  box-shadow: var(--shadow-sm);
+}
+
+.loan-sim-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.loan-sim-field label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--slate-600);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.loan-sim-field input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--slate-200);
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-weight: 600;
+  font-family: var(--font-family);
+  color: var(--slate-900);
+  outline: none;
+  transition: border-color 0.2s;
+  background: var(--slate-50);
+}
+
+.loan-sim-field input:focus {
+  border-color: var(--blue-600);
+  background: white;
+  box-shadow: 0 0 0 3px var(--blue-50);
+}
+
+.loan-sim-presets {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.loan-sim-big-number {
+  text-align: center;
+  padding: 20px 0 16px;
+}
+
+.loan-sim-big-label {
+  font-size: 12px;
+  color: var(--slate-400);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.loan-sim-big-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--blue-700);
+  letter-spacing: -1px;
+}
+
+.loan-sim-results {
+  background: var(--slate-50);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/* ─── PENGATURAN (SETTINGS) PAGE ───────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+.settings-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 16px;
+}
+
+.settings-nav {
+  background: white;
+  border-radius: var(--radius);
+  padding: 12px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-self: flex-start;
+  position: sticky;
+  top: 24px;
+}
+
+.settings-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: var(--slate-500);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+  width: 100%;
+}
+
+.settings-nav-item svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.settings-nav-item:hover {
+  background: var(--slate-50);
+  color: var(--slate-700);
+}
+
+.settings-nav-item.active {
+  background: var(--blue-50);
+  color: var(--blue-600);
+}
+
+.settings-content {
+  min-width: 0;
+}
+
+.settings-section-card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+}
+
+.settings-section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  gap: 12px;
+}
+
+.settings-section-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--slate-900);
+  margin-bottom: 3px;
+}
+
+.settings-section-desc {
+  font-size: 13px;
+  color: var(--slate-400);
+  margin: 0;
+}
+
+/* Avatar Row */
+.settings-avatar-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: var(--slate-50);
+  border-radius: var(--radius-sm);
+  margin-bottom: 24px;
+  border: 1px solid var(--slate-100);
+}
+
+.settings-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue-600), var(--blue-800));
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* Form Grid */
+.settings-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.settings-field.full-width {
+  grid-column: 1 / -1;
+}
+
+.settings-field label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--slate-500);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.settings-field input,
+.settings-field select,
+.settings-field textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid var(--slate-200);
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: var(--font-family);
+  color: var(--slate-800);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background: var(--slate-50);
+}
+
+.settings-field input:focus,
+.settings-field select:focus,
+.settings-field textarea:focus {
+  border-color: var(--blue-600);
+  background: white;
+  box-shadow: 0 0 0 3px var(--blue-50);
+}
+
+.settings-field textarea {
+  resize: vertical;
+}
+
+/* Actions */
+.settings-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 16px;
+  border-top: 1px solid var(--slate-100);
+}
+
+/* Security Toggle Grid */
+.settings-security-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settings-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-radius: 10px;
+  transition: background 0.15s;
+}
+
+.settings-toggle-row:hover {
+  background: var(--slate-50);
+}
+
+.settings-toggle-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.settings-toggle-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--slate-800);
+  margin-bottom: 2px;
+}
+
+.settings-toggle-desc {
+  font-size: 12px;
+  color: var(--slate-400);
+}
+
+/* Toggle Switch */
+.settings-switch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.settings-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.settings-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: var(--slate-200);
+  border-radius: 24px;
+  transition: all 0.25s;
+}
+
+.settings-slider::before {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  left: 3px;
+  bottom: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.25s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+
+.settings-switch input:checked + .settings-slider {
+  background: var(--blue-600);
+}
+
+.settings-switch input:checked + .settings-slider::before {
+  transform: translateX(20px);
+}
+
+/* Divider */
+.settings-divider {
+  height: 1px;
+  background: var(--slate-100);
+  margin: 16px 0;
+}
+
+/* Devices List */
+.settings-devices-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-device-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--slate-100);
+  background: var(--slate-50);
+}
+
+.settings-device-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--blue-50);
+  color: var(--blue-600);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.settings-device-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.settings-device-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--slate-800);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-device-last {
+  font-size: 11px;
+  color: var(--slate-400);
+  margin-top: 2px;
+}
+
+.settings-device-remove {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: 1px solid var(--slate-200);
+  background: white;
+  color: var(--red-500);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.settings-device-remove:hover {
+  background: var(--red-50);
+  border-color: var(--red-200);
+}
+
+/* Notification Groups */
+.settings-notif-group {
+  margin-bottom: 8px;
+}
+
+.settings-notif-group-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--slate-400);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  padding-left: 16px;
+}
+
 /* ─── RESPONSIVE ───────────────────────────────────────────────────────────── */
 @media (max-width: 1100px) {
   .ldg-summary-row { grid-template-columns: repeat(2, 1fr); }
   .fee-mid-row { grid-template-columns: 1fr; }
+  .loan-detail-row { grid-template-columns: 1fr; }
+  .loan-sim-container { grid-template-columns: 1fr; }
+  .settings-layout { grid-template-columns: 1fr; }
+  .settings-nav {
+    flex-direction: row;
+    overflow-x: auto;
+    position: static;
+  }
+  .settings-nav-item { white-space: nowrap; }
+  .pay-cat-grid { grid-template-columns: repeat(4, 1fr); }
 }
 
 @media (max-width: 768px) {
   .ldg-summary-row { grid-template-columns: 1fr; }
   .ldg-filter-bar { flex-direction: column; align-items: stretch; }
   .ldg-export-btn { margin-left: 0; }
+  .pay-cat-grid { grid-template-columns: repeat(2, 1fr); }
+  .settings-form-grid { grid-template-columns: 1fr; }
 }

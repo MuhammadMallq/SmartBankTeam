@@ -9,13 +9,13 @@ export function renderSidebar(currentPage, userName) {
       <nav class="sidebar-menu">
         <a href="#" class="menu-item nav-link ${currentPage === 'dashboard' ? 'active' : ''}" data-page="dashboard" title="Dashboard">${ic.home}</a>
         <a href="#" class="menu-item action-transfer" title="Transfer">${ic.transfer}</a>
-        <a href="#" class="menu-item" title="Pembayaran">${ic.payment}</a>
-        <a href="#" class="menu-item" title="Pinjaman">${ic.loan}</a>
+        <a href="#" class="menu-item nav-link ${currentPage === 'pembayaran' ? 'active' : ''}" data-page="pembayaran" title="Pembayaran">${ic.payment}</a>
+        <a href="#" class="menu-item nav-link ${currentPage === 'pinjaman' ? 'active' : ''}" data-page="pinjaman" title="Pinjaman">${ic.loan}</a>
         <a href="#" class="menu-item nav-link ${currentPage === 'ledger' ? 'active' : ''}" data-page="ledger" title="Ledger">${ic.ledger}</a>
         <a href="#" class="menu-item nav-link ${currentPage === 'biaya' ? 'active' : ''}" data-page="biaya" title="Biaya Layanan">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
         </a>
-        <a href="#" class="menu-item" title="Pengaturan">${ic.settings}</a>
+        <a href="#" class="menu-item nav-link ${currentPage === 'pengaturan' ? 'active' : ''}" data-page="pengaturan" title="Pengaturan">${ic.settings}</a>
       </nav>
       <div class="sidebar-bottom">
         <a href="#" id="logoutBtn" class="menu-item" title="Keluar" style="color: var(--red-500);">${ic.logout}</a>

@@ -1,6 +1,9 @@
 import '../../styles/style.css';
 import { renderLedgerPage, bindLedgerEvents } from '../../modules/ledger.js';
 import { renderBiayaLayananPage, bindBiayaLayananEvents } from '../../modules/biaya-layanan.js';
+import { renderPembayaranPage, bindPembayaranEvents } from '../../modules/pembayaran.js';
+import { renderPinjamanPage, bindPinjamanEvents } from '../../modules/pinjaman.js';
+import { renderPengaturanPage, bindPengaturanEvents } from '../../modules/pengaturan.js';
 import { renderDashboardUI, renderShellPage } from './ui.js';
 import { bindCommonEvents, bindDashboardEvents, openModal, closeModal } from './events.js';
 
@@ -49,6 +52,21 @@ function renderApp() {
     case 'biaya':
       container.innerHTML = renderShellPage(appState, 'biaya', renderBiayaLayananPage(appState));
       bindBiayaLayananEvents(appState, renderApp);
+      break;
+
+    case 'pembayaran':
+      container.innerHTML = renderShellPage(appState, 'pembayaran', renderPembayaranPage(appState));
+      bindPembayaranEvents(appState, renderApp);
+      break;
+
+    case 'pinjaman':
+      container.innerHTML = renderShellPage(appState, 'pinjaman', renderPinjamanPage(appState));
+      bindPinjamanEvents(appState, renderApp);
+      break;
+
+    case 'pengaturan':
+      container.innerHTML = renderShellPage(appState, 'pengaturan', renderPengaturanPage(appState));
+      bindPengaturanEvents(appState, renderApp);
       break;
 
     default:
