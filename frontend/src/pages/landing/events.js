@@ -148,6 +148,7 @@ export function bindCommonEvents(navigateTo, appState, renderApp) {
   document.getElementById('confirm-logout')?.addEventListener('click', (e) => {
     e.target.textContent = 'Memutus koneksi...';
     e.target.style.opacity = '0.7';
+    localStorage.removeItem('currentUser');
     setTimeout(() => { window.location.href = '/'; }, 800);
   });
 }

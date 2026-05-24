@@ -12,19 +12,13 @@ const AUTH_CONTENT = {
   formHeader: 'Otoritas perbankan utama Anda. Silakan masukan kredensial untuk melanjutkan.'
 };
 
-let credentials = { email: '', password: '' };
+let appData = null;
 
 async function initLogin() {
   try {
     const res = await fetch('/dummy_data.json');
-    const data = await res.json();
-    credentials = { email: data.user.email, password: data.user.password };
-    
+    appData = await res.json();
     renderLoginPage();
-    
-    // Auto-fill for demo
-    document.getElementById('email').value = credentials.email;
-    document.getElementById('password').value = credentials.password;
   } catch (e) {
     console.error('Failed to load credentials:', e);
     renderLoginPage();
@@ -78,7 +72,36 @@ function handleLogin(e) {
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
 
-  if (email === credentials.email && password === credentials.password) {
+  if (!appData) {
+    showToast('Sistem belum siap, silakan coba lagi.', 'error');
+    return;
+  }
+
+  let loggedInUser = null;
+
+  // 1. Check primary user (Budi)
+  if (email === appData.user.email && password === appData.user.password) {
+    loggedInUser = {
+      id: appData.user.id,
+      name: appData.user.name,
+      email: appData.user.email,
+      balance: appData.dashboard.balance
+    };
+  } else {
+    // 2. Check other registered customers (from contacts list)
+    const matchedContact = appData.contacts.find(c => c.email === email && c.password === password);
+    if (matchedContact) {
+      loggedInUser = {
+        id: matchedContact.id,
+        name: matchedContact.name,
+        email: matchedContact.email,
+        balance: 50000.00 // Standard starting balance for other customers
+      };
+    }
+  }
+
+  if (loggedInUser) {
+    localStorage.setItem('currentUser', JSON.stringify(loggedInUser));
     showToast('Login berhasil! Mengalihkan...');
     setTimeout(() => {
       window.location.href = '/dashboard.html';

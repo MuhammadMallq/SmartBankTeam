@@ -23,7 +23,7 @@ document.querySelector('#app-auth').innerHTML = `
         <div class="admin-logo-wrapper">
           ${adminIcon}
         </div>
-        <h1>SECURE CORE</h1>
+        <h1></h1>
         <p>Administrative Authority</p>
       </div>
 
@@ -64,9 +64,6 @@ fetch('/dummy_data.json')
   .then(data => {
     correctEmail = data.admin.email;
     correctPassword = data.admin.password;
-    // Pre-fill for convenience
-    document.getElementById('email').value = correctEmail;
-    document.getElementById('password').value = correctPassword;
   })
   .catch(err => console.error("Could not load dummy data:", err));
 
