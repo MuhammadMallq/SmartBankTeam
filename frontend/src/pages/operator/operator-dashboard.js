@@ -115,12 +115,23 @@ const OP_ICONS = {
 
 // ─── Bootstrap ───────────────────────────────────────────────────────────────
 async function bootstrap() {
+  const loggedInStr = localStorage.getItem('operatorUser');
+  if (!loggedInStr) {
+    window.location.href = '/operator-login.html';
+    return;
+  }
+  const operatorUser = JSON.parse(loggedInStr);
+
+  appData = { operator: operatorUser, contacts: [], ledger: [] };
+
   try {
-    const res = await fetch('/dummy_data.json');
-    appData = await res.json();
+    const res = await fetch('http://localhost:3000/api/admin/users');
+    if (res.ok) {
+      const allUsers = await res.json();
+      appData.contacts = allUsers.filter(u => u.role === 'user' || u.role === 'contact');
+    }
   } catch (e) {
-    console.error('Failed to load data, using defaults', e);
-    appData = { contacts: [], ledger: [], operator: { name: 'Operator Support', id: 'OPR-01' } };
+    console.error('Failed to load contacts', e);
   }
 
   queueData = generateQueueData();
@@ -570,7 +581,7 @@ function renderCustomerList(filter = '') {
             </td>
             <td style="font-family:monospace; font-size:12px; color:rgba(255,255,255,0.5);">${c.id}</td>
             <td style="font-size:12px; color:rgba(255,255,255,0.5);">${c.email}</td>
-            <td><span class="op-badge resolved" style="font-size:10px;">${OP_ICONS.verified} Aktif</span></td>
+            <td><span class="op-badge ${c.status === 'suspended' ? 'urgent' : 'resolved'}" style="font-size:10px;">${c.status === 'suspended' ? 'Suspended' : OP_ICONS.verified + ' Aktif'}</span></td>
             <td style="text-align:right">
               <button class="op-btn primary btn-view-customer" data-customer-id="${c.id}" style="font-size:11px;">${OP_ICONS.eye} Detail</button>
             </td>

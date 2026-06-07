@@ -7,17 +7,10 @@ import { ICONS, showToast } from '../../utils/ui-core.js';
  */
 
 async function initManagerLogin() {
-  try {
-    const res = await fetch('/dummy_data.json');
-    const data = await res.json();
-    renderManagerLoginPage(data.manager);
-  } catch (e) {
-    console.error('Failed to load manager credentials:', e);
-    renderManagerLoginPage({ email: 'manager@smartbank.local', password: 'password' });
-  }
+  renderManagerLoginPage();
 }
 
-function renderManagerLoginPage(creds) {
+function renderManagerLoginPage() {
   document.querySelector('#app-auth').innerHTML = `
   <div class="auth-wrapper login-theme">
     <div class="auth-hero" style="background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);">
@@ -57,18 +50,38 @@ function renderManagerLoginPage(creds) {
 
   const form = document.getElementById('managerLoginForm');
 
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
 
-    if (email === creds.email && password === creds.password) {
+    try {
+      const res = await fetch('http://localhost:3000/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      if (!res.ok) {
+        showToast('Kredensial Manajer Salah!', 'error');
+        return;
+      }
+
+      const user = await res.json();
+      
+      if (user.role !== 'manager' && user.role !== 'admin') {
+        showToast('Akses ditolak. Bukan Manajer.', 'error');
+        return;
+      }
+
+      localStorage.setItem('managerUser', JSON.stringify(user));
       showToast('Login Manajer Berhasil!');
       setTimeout(() => {
         window.location.href = '/manager-dashboard.html';
       }, 1500);
-    } else {
-      showToast('Kredensial Manajer Salah!', 'error');
+
+    } catch (err) {
+      showToast('Koneksi ke database gagal!', 'error');
     }
   });
 }

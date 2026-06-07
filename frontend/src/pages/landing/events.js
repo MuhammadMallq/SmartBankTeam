@@ -58,7 +58,7 @@ export function selectContact(id, appState) {
   if (nextBtn) nextBtn.disabled = false;
 }
 
-export function processTransfer(event, appState, renderApp) {
+export async function processTransfer(event, appState, renderApp) {
   event.preventDefault();
   if (isCooldown) {
     showToastModal('Cooldown aktif. Harap tunggu 10 detik sebelum transfer berikutnya.', 'warning');
@@ -84,27 +84,52 @@ export function processTransfer(event, appState, renderApp) {
     return;
   }
 
-  // Execute
-  appState.dashboard.balance -= totalDeduction;
-  appState.dashboard.dailyTransactions.used += 1;
-  appState.dashboard.dailyTransactions.remaining -= 1;
-  appState.dashboard.monthlyFee.amount += totalFee;
-  appState.dashboard.history.unshift({
-    id: 'TRF-' + Math.floor(1000 + Math.random() * 9000),
-    title: 'Transfer ke ' + selectedContact.name,
-    app: 'SmartBank',
-    time: 'Baru Saja',
-    status: 'Sukses',
-    amount: -totalDeduction
-  });
+  // Call the Backend API
+  try {
+    const btn = document.getElementById('trf-step2-btn');
+    if (btn) btn.disabled = true;
 
-  isCooldown = true;
-  setTimeout(() => { isCooldown = false; }, 10000);
-  const sentName = selectedContact.name;
-  closeModal('modal-transfer');
-  selectedContact = null;
-  renderApp();
-  showPageToast(`✓ Transfer ke ${sentName} berhasil!`);
+    const req = await fetch('http://localhost:3000/api/transfer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        amount: amount,
+        to_user: selectedContact.id,
+        to_name: selectedContact.name,
+        from_user: appState.user.id
+      })
+    });
+    
+    if (!req.ok) throw new Error('Transfer failed');
+
+    // Refetch the data to get updated balance and history
+    let fetchUrl = 'http://localhost:3000/api/dashboard/data';
+    const storedUserStr = localStorage.getItem('currentUser');
+    if (storedUserStr) {
+      const storedUser = JSON.parse(storedUserStr);
+      fetchUrl += '?userId=' + storedUser.id;
+    }
+    const res = await fetch(fetchUrl);
+    const newData = await res.json();
+    
+    // Update local appState with new values
+    appState.dashboard = newData.dashboard;
+    appState.user = newData.user;
+    appState.ledger = newData.ledger;
+
+    isCooldown = true;
+    setTimeout(() => { isCooldown = false; }, 10000);
+    const sentName = selectedContact.name;
+    closeModal('modal-transfer');
+    selectedContact = null;
+    renderApp();
+    showPageToast(`✓ Transfer ke ${sentName} berhasil!`);
+  } catch (err) {
+    showToastModal('Gagal memproses transfer ke server.', 'error');
+  } finally {
+    const btn = document.getElementById('trf-step2-btn');
+    if (btn) btn.disabled = false;
+  }
 }
 
 /* ─── Feedback & Toasts ────────────────────────────────────────────────────── */

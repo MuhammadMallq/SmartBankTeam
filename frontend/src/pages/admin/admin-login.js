@@ -56,16 +56,7 @@ document.querySelector('#app-auth').innerHTML = `
   </div>
 `;
 
-let correctEmail = "";
-let correctPassword = "";
 
-fetch('/dummy_data.json')
-  .then(res => res.json())
-  .then(data => {
-    correctEmail = data.admin.email;
-    correctPassword = data.admin.password;
-  })
-  .catch(err => console.error("Could not load dummy data:", err));
 
 function showToast(message, type = 'success') {
   const toast = document.createElement('div');
@@ -82,17 +73,38 @@ function showToast(message, type = 'success') {
   }, 3000);
 }
 
-document.getElementById('adminLoginForm').addEventListener('submit', (e) => {
+document.getElementById('adminLoginForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
   
-  if (email === correctEmail && password === correctPassword) {
+  try {
+    const res = await fetch('http://localhost:3000/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+
+    if (!res.ok) {
+      showToast('Auth Denied. Invalid key.', 'error');
+      return;
+    }
+
+    const user = await res.json();
+    
+    if (user.role !== 'admin') {
+      showToast('Auth Denied. Insufficient clearance.', 'error');
+      return;
+    }
+
+    localStorage.setItem('adminUser', JSON.stringify(user));
     showToast('Auth Success. Redirecting...', 'success');
+    
     setTimeout(() => {
       window.location.href = '/admin-dashboard.html';
     }, 1500);
-  } else {
-    showToast('Auth Denied. Invalid key.', 'error');
+
+  } catch (err) {
+    showToast('Connection to core failed.', 'error');
   }
 });

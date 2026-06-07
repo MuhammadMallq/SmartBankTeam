@@ -91,7 +91,10 @@ export function renderDashboardUI(appState) {
         <!-- ROW 3: Transactions + Rate -->
         <div class="bottom-row">
           ${renderRecentTransactions(data)}
-          ${renderExchangeRateCard(dateStr)}
+          <div style="display:flex; flex-direction:column; gap:20px;">
+            ${renderExchangeRateCard(dateStr)}
+            ${renderNewsCard(data)}
+          </div>
         </div>
 
       </div>
@@ -190,7 +193,7 @@ function renderRecentTransactions(data) {
         <span style="font-size:13px;color:var(--blue-600);cursor:pointer;font-weight:600;">Lihat Semua</span>
       </div>
       <div class="tx-list">
-        ${data.dashboard.history.map(row => {
+        ${(data.dashboard.history || []).map(row => {
           const isDebit = row.amount < 0;
           const avatar = isDebit
             ? `<div class="tx-avatar debit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="17" y1="7" x2="7" y2="17"></line><polyline points="17 17 7 17 7 7"></polyline></svg></div>`
@@ -206,7 +209,7 @@ function renderRecentTransactions(data) {
         }).join('')}
       </div>
       <div class="tx-pagination">
-        <div class="tx-pagination-info">Menampilkan 1–${data.dashboard.history.length} data</div>
+        <div class="tx-pagination-info">Menampilkan 1–${(data.dashboard.history || []).length} data</div>
         <div class="tx-pages">
           <button class="tx-page-btn">‹</button>
           <button class="tx-page-btn active">1</button>
@@ -257,6 +260,28 @@ function renderExchangeRateCard(dateStr) {
           <div class="converter-amount" style="color:var(--blue-600);">16.285.000</div>
         </div>
         <div class="converter-rate-note">1 IDR = 0,000061 USD</div>
+      </div>
+    </div>`;
+}
+
+function renderNewsCard(data) {
+  const news = data.news || [];
+  if (news.length === 0) return '';
+  return `
+    <div class="rate-card" style="margin-top: 0;">
+      <div class="rate-card-title">Berita Keuangan Terkini</div>
+      <div class="rate-card-sub" style="margin-bottom: 16px;">Real-time Update</div>
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        ${news.map(n => `
+          <div style="padding-bottom:12px;border-bottom:1px solid var(--slate-100);">
+            <div style="font-size:11px;color:var(--blue-600);font-weight:600;margin-bottom:4px;text-transform:uppercase;">${n.source}</div>
+            <div style="font-weight:700;font-size:14px;color:var(--slate-900);line-height:1.4;margin-bottom:6px;">
+              <a href="${n.url || '#'}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;color:inherit;">${n.title}</a>
+            </div>
+            <div style="font-size:13px;color:var(--slate-500);line-height:1.5;">${n.summary}</div>
+            <div style="font-size:11px;color:var(--slate-400);margin-top:6px;">Baru saja</div>
+          </div>
+        `).join('')}
       </div>
     </div>`;
 }

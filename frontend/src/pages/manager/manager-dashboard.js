@@ -14,9 +14,27 @@ let bankVaultBalance = 1000000000;
  * Initialize Manager System
  */
 async function bootstrap() {
+  const loggedInStr = localStorage.getItem('managerUser');
+  if (!loggedInStr) {
+    window.location.href = '/manager-login.html';
+    return;
+  }
+  const managerUser = JSON.parse(loggedInStr);
+
+  appState = { manager: managerUser, transactions: { history: [] } };
+
   try {
-    const res = await fetch('/dummy_data.json');
-    appState = await res.json();
+    const res = await fetch('http://localhost:3000/api/admin/ledgers');
+    if (res.ok) {
+      const ledgers = await res.json();
+      appState.transactions.history = ledgers.map(l => ({
+        title: l.description,
+        category: l.app,
+        type: 'credit',
+        amount: l.amount,
+        date: new Date(l.timestamp).toLocaleDateString()
+      }));
+    }
     renderMainLayout();
   } catch (e) {
     document.querySelector('#app').innerHTML = '<div class="error-msg">SYSTEM_ERR: Failed to load manager data.</div>';
@@ -56,7 +74,7 @@ function renderMainLayout() {
           <div class="topnav-user border border-slate-200 rounded-xl px-3 py-1 flex items-center gap-3">
             <div class="topnav-user-avatar bg-blue-600 text-white">M</div>
             <div class="flex flex-col">
-              <span class="text-sm font-bold">Manager Ops</span>
+              <span class="text-sm font-bold">${appState?.manager?.name || 'Manager Ops'}</span>
               <span class="text-[10px] text-slate-500">Operational Authority</span>
             </div>
           </div>

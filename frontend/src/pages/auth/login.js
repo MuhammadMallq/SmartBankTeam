@@ -12,17 +12,8 @@ const AUTH_CONTENT = {
   formHeader: 'Otoritas perbankan utama Anda. Silakan masukan kredensial untuk melanjutkan.'
 };
 
-let appData = null;
-
 async function initLogin() {
-  try {
-    const res = await fetch('/dummy_data.json');
-    appData = await res.json();
-    renderLoginPage();
-  } catch (e) {
-    console.error('Failed to load credentials:', e);
-    renderLoginPage();
-  }
+  renderLoginPage();
 }
 
 function renderLoginPage() {
@@ -67,47 +58,46 @@ function renderLoginPage() {
   document.getElementById('loginForm').addEventListener('submit', handleLogin);
 }
 
-function handleLogin(e) {
+async function handleLogin(e) {
   e.preventDefault();
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
 
-  if (!appData) {
-    showToast('Sistem belum siap, silakan coba lagi.', 'error');
-    return;
-  }
+  try {
+    const res = await fetch('http://localhost:3000/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
 
-  let loggedInUser = null;
-
-  // 1. Check primary user (Budi)
-  if (email === appData.user.email && password === appData.user.password) {
-    loggedInUser = {
-      id: appData.user.id,
-      name: appData.user.name,
-      email: appData.user.email,
-      balance: appData.dashboard.balance
-    };
-  } else {
-    // 2. Check other registered customers (from contacts list)
-    const matchedContact = appData.contacts.find(c => c.email === email && c.password === password);
-    if (matchedContact) {
-      loggedInUser = {
-        id: matchedContact.id,
-        name: matchedContact.name,
-        email: matchedContact.email,
-        balance: 50000.00 // Standard starting balance for other customers
-      };
+    if (!res.ok) {
+      const err = await res.json();
+      showToast(err.error || 'Kredensial salah! Akses ditolak.', 'error');
+      return;
     }
-  }
 
-  if (loggedInUser) {
-    localStorage.setItem('currentUser', JSON.stringify(loggedInUser));
+    const user = await res.json();
+    
+    // Check if user is trying to access correct portal
+    if (user.role !== 'user' && user.role !== 'contact') {
+      showToast('Akses ditolak. Gunakan portal karyawan untuk staf.', 'error');
+      return;
+    }
+
+    localStorage.setItem('currentUser', JSON.stringify({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      balance: user.balance
+    }));
+    
     showToast('Login berhasil! Mengalihkan...');
     setTimeout(() => {
       window.location.href = '/dashboard.html';
     }, 1500);
-  } else {
-    showToast('Kredensial salah! Akses ditolak.', 'error');
+
+  } catch (err) {
+    showToast('Koneksi ke database gagal!', 'error');
   }
 }
 

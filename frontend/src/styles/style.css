@@ -1078,6 +1078,24 @@ svg { display: block; flex-shrink: 0; }
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
   margin-bottom: 4px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 4px; /* for scrollbar */
+}
+/* custom scrollbar for contact grid */
+.contact-grid::-webkit-scrollbar {
+  width: 6px;
+}
+.contact-grid::-webkit-scrollbar-track {
+  background: var(--slate-50);
+  border-radius: 8px;
+}
+.contact-grid::-webkit-scrollbar-thumb {
+  background: var(--slate-300);
+  border-radius: 8px;
+}
+.contact-grid::-webkit-scrollbar-thumb:hover {
+  background: var(--slate-400);
 }
 
 .contact-chip {

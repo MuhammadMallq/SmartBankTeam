@@ -7,17 +7,10 @@ import { ICONS, showToast } from '../../utils/ui-core.js';
  */
 
 async function initTellerLogin() {
-  try {
-    const res = await fetch('/dummy_data.json');
-    const data = await res.json();
-    renderTellerLoginPage(data.teller);
-  } catch (e) {
-    console.error('Failed to load teller credentials:', e);
-    renderTellerLoginPage({ email: 'teller@smartbank.local', password: 'password' });
-  }
+  renderTellerLoginPage();
 }
 
-function renderTellerLoginPage(creds) {
+function renderTellerLoginPage() {
   document.querySelector('#app-auth').innerHTML = `
   <div class="auth-wrapper login-theme">
     <div class="auth-hero" style="background: linear-gradient(135deg, #4338ca 0%, #4f46e5 100%);">
@@ -57,18 +50,38 @@ function renderTellerLoginPage(creds) {
 
   const form = document.getElementById('tellerLoginForm');
 
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
 
-    if (email === creds.email && password === creds.password) {
+    try {
+      const res = await fetch('http://localhost:3000/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      if (!res.ok) {
+        showToast('Kredensial Teller Salah!', 'error');
+        return;
+      }
+
+      const user = await res.json();
+      
+      if (user.role !== 'teller' && user.role !== 'admin') {
+        showToast('Akses ditolak. Bukan Teller.', 'error');
+        return;
+      }
+
+      localStorage.setItem('tellerUser', JSON.stringify(user));
       showToast('Login Teller Berhasil!');
       setTimeout(() => {
         window.location.href = '/teller-dashboard.html';
       }, 1500);
-    } else {
-      showToast('Kredensial Teller Salah!', 'error');
+
+    } catch (err) {
+      showToast('Koneksi ke database gagal!', 'error');
     }
   });
 }

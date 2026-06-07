@@ -31,37 +31,24 @@ let systemLogs = [
 // --- Bootstrapping System ---
 async function bootstrap() {
   try {
-    const res = await fetch('/dummy_data.json');
-    if (!res.ok) throw new Error('Failed to load dummy data');
-    appState = await res.json();
+    // Fetch all admin data
+    const [usersRes, ledgersRes, statsRes, feesRes] = await Promise.all([
+      fetch('http://localhost:3000/api/admin/users'),
+      fetch('http://localhost:3000/api/admin/ledgers'),
+      fetch('http://localhost:3000/api/admin/stats'),
+      fetch('http://localhost:3000/api/admin/fees')
+    ]);
 
-    // Parse dummy users into unified users database array
-    usersDB = [
-      { id: appState.admin.id, name: appState.admin.name, email: appState.admin.email, role: 'admin', balance: 980000000.00, status: 'verified' },
-      { id: appState.manager.id, name: appState.manager.name, email: appState.manager.email, role: 'manager', balance: 0.00, status: 'verified' },
-      { id: appState.operator.id, name: appState.operator.name, email: appState.operator.email, role: 'operator', balance: 0.00, status: 'verified' },
-      { id: appState.teller.id, name: appState.teller.name, email: appState.teller.email, role: 'teller', balance: 0.00, status: 'verified' },
-      { id: appState.user.id, name: appState.user.name, email: appState.user.email, role: 'customer', balance: appState.dashboard.balance, status: 'verified' }
-    ];
+    if (!usersRes.ok || !ledgersRes.ok || !statsRes.ok || !feesRes.ok) {
+      throw new Error('Failed to load admin data from API');
+    }
 
-    // Add contacts as customers
-    appState.contacts.forEach(c => {
-      usersDB.push({
-        id: c.id,
-        name: c.name,
-        email: c.email || `${c.name.toLowerCase().replace(/\s+/g, '')}@smartbank.local`,
-        role: 'customer',
-        balance: 50000.00,
-        status: 'verified'
-      });
-    });
-
-    // Parse dummy ledger
-    ledgerDB = [...appState.ledger];
-
-    // Load custom policies from dummy collected rate values
-    systemPolicies.feeRate = (appState.bankFees.feeRate * 100) || 1.0;
-    systemPolicies.taxRate = (appState.bankFees.taxRate * 100) || 2.0;
+    usersDB = await usersRes.json();
+    ledgerDB = await ledgersRes.json();
+    appState = {
+      stats: await statsRes.json(),
+      fees: await feesRes.json()
+    };
 
     // Render Base Page
     renderBaseLayout();
@@ -147,20 +134,18 @@ function renderActiveTab() {
 
 // 1. Tab: Mainframe Overview
 function renderSystemOverview() {
-  // Compute basic metrics
-  const totalUsers = usersDB.length;
-  const totalSupply = 100000000; // 100 Million Max Money Supply
+  // Compute basic metrics from API Stats
+  const totalUsers = appState.stats.totalUsers || usersDB.length;
+  const totalSupply = 1000000000; // 1 Billion Max Money Supply (updated to 1M)
+  
+  // Calculate total circulating balance (from real DB logic)
+  const circulatingSupply = appState.stats.totalBalance || usersDB.reduce((sum, u) => sum + u.balance, 0);
 
-  // Calculate total circulating balance (sum of user balances except reserve bank / admin)
-  const circulatingSupply = usersDB
-    .filter(u => u.role !== 'admin')
-    .reduce((sum, u) => sum + u.balance, 0);
-
-  // Reserve Bank holds the remaining pool (Reserve must be >= 98%)
+  // Reserve Bank holds the remaining pool
   const bankReserve = totalSupply - circulatingSupply;
-  const reservePercent = (bankReserve / totalSupply * 100).toFixed(2);
+  const reservePercent = ((bankReserve / totalSupply) * 100).toFixed(2);
 
-  const collectedFees = appState.bankFees.totalCollected || 4960;
+  const collectedFees = appState.stats.totalFeesCollected || 0;
 
   return `
     <div class="content-header">
@@ -254,7 +239,7 @@ function renderSystemOverview() {
           <h3>Apa Tugas & Tanggung Jawab Admin?</h3>
           <div class="info-item">
             <h4>${ICONS.vault} Regulator Moneter & Money Supply</h4>
-            <p>Admin mengawasi kestabilan nilai uang dalam ekosistem. Sesuai ketentuan SmartBank, total uang dibatasi maksimal Rp 1.000.000.000 (1 Miliar) dengan minimal cadangan bank (Reserves) sebesar 98%.</p>
+            <p>Admin mengawasi kestabilan nilai uang dalam ekosistem. Sesuai ketentuan SmartBank, total uang dibatasi maksimal Rp 1.000.000.000 (1 Miliar) dengan minimal cadangan bank (Reserves) sebesar 90%.</p>
           </div>
           <div class="info-item">
             <h4>${ICONS.users} Manajemen Otoritas & Hak Akses Staff</h4>
@@ -314,7 +299,7 @@ function renderUserManagement() {
             <!-- Role -->
             <div>
               <select class="select-role" data-id="${user.id}">
-                <option value="customer" ${user.role === 'customer' ? 'selected' : ''}>Customer</option>
+                <option value="user" ${user.role === 'user' ? 'selected' : ''}>Customer</option>
                 <option value="operator" ${user.role === 'operator' ? 'selected' : ''}>Operator</option>
                 <option value="teller" ${user.role === 'teller' ? 'selected' : ''}>Teller</option>
                 <option value="manager" ${user.role === 'manager' ? 'selected' : ''}>Manager</option>
@@ -561,28 +546,42 @@ function attachTabEvents() {
 function attachTableActions() {
   // 1. Role Change Handler
   document.querySelectorAll('.select-role').forEach(select => {
-    select.addEventListener('change', (e) => {
+    select.addEventListener('change', async (e) => {
       const userId = e.target.getAttribute('data-id');
       const newRole = e.target.value;
       const user = usersDB.find(u => u.id === userId);
 
       if (user) {
-        const oldRole = user.role;
-        user.role = newRole;
+        try {
+          const res = await fetch(`http://localhost:3000/api/admin/users/${userId}/role`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ role: newRole })
+          });
+          
+          if (!res.ok) throw new Error('Update failed');
+          
+          const oldRole = user.role;
+          user.role = newRole;
 
-        // Log to system logs
-        const timeNow = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-        systemLogs.unshift({
-          time: timeNow,
-          tag: 'KYC',
-          text: `User authority changed: "${user.name}" (${user.id}) elevated from ${oldRole.toUpperCase()} to ${newRole.toUpperCase()}.`
-        });
+          // Log to system logs
+          const timeNow = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+          systemLogs.unshift({
+            time: timeNow,
+            tag: 'KYC',
+            text: `User authority changed: "${user.name}" (${user.id}) elevated from ${oldRole.toUpperCase()} to ${newRole.toUpperCase()}.`
+          });
 
-        showToast(`Perubahan Hak Akses Berhasil: ${user.name} diubah menjadi ${newRole.toUpperCase()}`);
+          showToast(`Perubahan Hak Akses Berhasil: ${user.name} diubah menjadi ${newRole.toUpperCase()}`);
 
-        // If system overview is rendered, update stats. Just render content again
-        if (currentTab === 'System Data') {
-          renderBaseLayout();
+          // Refresh data quietly
+          fetch('http://localhost:3000/api/admin/stats')
+            .then(r => r.json())
+            .then(data => appState.stats = data);
+            
+        } catch(err) {
+          showToast(`Gagal merubah hak akses: ${err.message}`, 'error');
+          e.target.value = user.role; // revert
         }
       }
     });
@@ -590,27 +589,36 @@ function attachTableActions() {
 
   // 2. KYC Toggle Handler
   document.querySelectorAll('[data-action="toggle-kyc"]').forEach(badge => {
-    badge.addEventListener('click', (e) => {
+    badge.addEventListener('click', async (e) => {
       const userId = e.target.getAttribute('data-id');
       const user = usersDB.find(u => u.id === userId);
       if (user) {
-        const oldStatus = user.status;
-        user.status = oldStatus === 'verified' ? 'pending' : 'verified';
+        try {
+          const res = await fetch(`http://localhost:3000/api/admin/users/${userId}/status`, {
+            method: 'PUT'
+          });
+          if (!res.ok) throw new Error('Toggle status failed');
+          const data = await res.json();
+          
+          user.status = data.new_status;
 
-        const timeNow = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-        systemLogs.unshift({
-          time: timeNow,
-          tag: 'KYC',
-          text: `Account Verification update: "${user.name}" KYC status modified to ${user.status.toUpperCase()}.`
-        });
+          const timeNow = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+          systemLogs.unshift({
+            time: timeNow,
+            tag: 'KYC',
+            text: `Account Verification update: "${user.name}" KYC status modified to ${user.status.toUpperCase()}.`
+          });
 
-        showToast(`KYC Status "${user.name}" diubah menjadi ${user.status.toUpperCase()}`);
+          showToast(`KYC Status "${user.name}" diubah menjadi ${user.status.toUpperCase()}`);
 
-        // Re-render table state
-        const content = document.querySelector('.page-content');
-        if (content) {
-          content.innerHTML = renderActiveTab();
-          attachTableActions();
+          // Re-render table state
+          const content = document.querySelector('.page-content');
+          if (content) {
+            content.innerHTML = renderActiveTab();
+            attachTableActions();
+          }
+        } catch(err) {
+          showToast(`Gagal merubah status KYC: ${err.message}`, 'error');
         }
       }
     });
@@ -685,38 +693,46 @@ function attachTableActions() {
   // 7. Create New Account click
   const newAccountBtn = document.getElementById('createNewAccountBtn');
   if (newAccountBtn) {
-    newAccountBtn.addEventListener('click', () => {
+    newAccountBtn.addEventListener('click', async () => {
       const name = prompt("Masukkan Nama Lengkap Nasabah Baru:");
       if (!name) return;
       const email = prompt("Masukkan Email Nasabah Baru:");
       if (!email) return;
 
-      const newId = 'USR-' + Math.floor(10000 + Math.random() * 90000);
-      const newRecord = {
-        id: newId,
-        name: name,
-        email: email,
-        role: 'customer',
-        balance: 50000.00,
-        status: 'verified'
-      };
+      try {
+        const res = await fetch('http://localhost:3000/api/admin/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: name,
+            email: email,
+            password: 'password123',
+            role: 'user'
+          })
+        });
 
-      usersDB.push(newRecord);
+        if (!res.ok) throw new Error('Failed to create account');
+        const newRecord = await res.json();
 
-      const timeNow = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-      systemLogs.unshift({
-        time: timeNow,
-        tag: 'KYC',
-        text: `New customer account registered: "${name}" (${newId}) with starting balance Rp 50.000.`
-      });
+        usersDB.push(newRecord);
 
-      showToast(`Pendaftaran Berhasil: ${name} (${newId})`);
+        const timeNow = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        systemLogs.unshift({
+          time: timeNow,
+          tag: 'KYC',
+          text: `New customer account registered: "${name}" (${newRecord.id}) with starting balance Rp 50.000.`
+        });
 
-      // Re-render table
-      const content = document.querySelector('.page-content');
-      if (content) {
-        content.innerHTML = renderActiveTab();
-        attachTableActions();
+        showToast(`Pendaftaran Berhasil: ${name} (${newRecord.id})`);
+
+        // Re-render table
+        const content = document.querySelector('.page-content');
+        if (content) {
+          content.innerHTML = renderActiveTab();
+          attachTableActions();
+        }
+      } catch(err) {
+        showToast(`Gagal mendaftarkan akun: ${err.message}`, 'error');
       }
     });
   }

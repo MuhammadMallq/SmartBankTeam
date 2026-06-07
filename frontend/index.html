@@ -6,7 +6,7 @@
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SmartBank - Home
-  
+
   </title>
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -63,11 +63,11 @@
     <!-- Statistics Bar -->
     <div class="stats-bar">
       <div class="stat-item">
-        <h3 class="stat-value">5M+</h3>
+        <h3 class="stat-value" id="stat-nasabah">5M+</h3>
         <p class="stat-label">Nasabah Aktif</p>
       </div>
       <div class="stat-item">
-        <h3 class="stat-value">Rp 100M+</h3>
+        <h3 class="stat-value" id="stat-aset">Rp 100M+</h3>
         <p class="stat-label">Total Aset</p>
       </div>
       <div class="stat-item">
@@ -143,7 +143,7 @@
       <div class="section-line"></div>
     </div>
 
-    <div class="news-grid">
+    <div class="news-grid" id="landing-news-grid">
       <article class="news-card">
         <div class="news-img bg-blue-1"></div>
         <div class="news-content">
@@ -176,7 +176,7 @@
       </article>
     </div>
     <div class="news-center-btn">
-      <a href="#" class="btn btn-outline">Lihat Semua Berita</a>
+      <a href="javascript:void(0)" class="btn btn-outline" id="view-all-news-btn">Lihat Semua Berita</a>
     </div>
   </section>
 
@@ -222,7 +222,8 @@
           <ul>
             <li><i class="fa-solid fa-phone"></i> 1500-123 (Call Center)</li>
             <li><i class="fa-solid fa-envelope"></i> contact@smartbank.co.id</li>
-            <li><i class="fa-solid fa-location-dot"></i> Jl. Sariasih No. 54 Sarijadi, Kec. Sukasari, Kota Bandung 40151, Indonesia</li>
+            <li><i class="fa-solid fa-location-dot"></i> Jl. Sariasih No. 54 Sarijadi, Kec. Sukasari, Kota Bandung
+              40151, Indonesia</li>
           </ul>
         </div>
       </div>

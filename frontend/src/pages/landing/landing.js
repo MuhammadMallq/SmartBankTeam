@@ -83,4 +83,81 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   });
+
+  // Fetch real-time news & stats
+  fetchNews();
+  fetchStats();
 });
+
+async function fetchStats() {
+  try {
+    const res = await fetch('http://localhost:3000/api/admin/stats');
+    if (!res.ok) return;
+    const stats = await res.json();
+    
+    const nasabahEl = document.getElementById('stat-nasabah');
+    const asetEl = document.getElementById('stat-aset');
+    
+    if (nasabahEl && stats.totalUsers) {
+      nasabahEl.textContent = stats.totalUsers.toLocaleString('id-ID');
+    }
+    if (asetEl && stats.totalBalance !== undefined) {
+      let formattedAset;
+      if (stats.totalBalance >= 1000000000) {
+        formattedAset = `Rp ${(stats.totalBalance / 1000000000).toFixed(1)} Miliar+`;
+      } else if (stats.totalBalance >= 1000000) {
+        formattedAset = `Rp ${(stats.totalBalance / 1000000).toFixed(1)} Juta+`;
+      } else {
+        formattedAset = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(stats.totalBalance);
+      }
+      asetEl.textContent = formattedAset;
+    }
+  } catch(e) {
+    console.error('Failed to fetch stats', e);
+  }
+}
+
+let allNewsData = [];
+let showingAllNews = false;
+
+async function fetchNews() {
+  // Bind the button regardless of fetch success
+  const btn = document.getElementById('view-all-news-btn');
+  if (btn && !btn.hasAttribute('data-bound')) {
+    btn.setAttribute('data-bound', 'true');
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      showingAllNews = !showingAllNews;
+      renderNews();
+      btn.textContent = showingAllNews ? 'Tampilkan Lebih Sedikit' : 'Lihat Semua Berita';
+    });
+  }
+
+  try {
+    const res = await fetch('http://localhost:3000/api/news');
+    if (!res.ok) return;
+    allNewsData = await res.json();
+    renderNews();
+  } catch (err) {
+    console.error('Failed to fetch news', err);
+  }
+}
+
+function renderNews() {
+  const grid = document.getElementById('landing-news-grid');
+  if (!grid || allNewsData.length === 0) return;
+  
+  const newsToShow = showingAllNews ? allNewsData : allNewsData.slice(0, 3);
+  
+  grid.innerHTML = newsToShow.map((n, i) => `
+    <article class="news-card">
+      <div class="news-img bg-blue-${(i % 3) + 1}"></div>
+      <div class="news-content">
+        <span class="news-date">${n.source}</span>
+        <h3 class="news-title">${n.title}</h3>
+        <p class="news-excerpt">${n.summary}</p>
+        <a href="${n.url || 'javascript:void(0)'}" target="${n.url ? '_blank' : '_self'}" rel="noopener noreferrer" class="news-readmore">Baca Selengkapnya</a>
+      </div>
+    </article>
+  `).join('');
+}

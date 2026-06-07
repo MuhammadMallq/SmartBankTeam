@@ -16,7 +16,7 @@ let appState = null;
 
 async function bootstrap() {
   try {
-    const res = await fetch('/dummy_data.json');
+    const res = await fetch('http://localhost:3000/api/data');
     appState = await res.json();
     renderAdminUI();
   } catch (e) {

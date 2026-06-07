@@ -15,18 +15,23 @@ let currentPage = 'dashboard';
 
 async function bootstrap() {
   try {
-    const res = await fetch('/dummy_data.json');
+    const storedUserStr = localStorage.getItem('currentUser');
+    let fetchUrl = 'http://localhost:3000/api/dashboard/data';
+    if (storedUserStr) {
+      const storedUser = JSON.parse(storedUserStr);
+      fetchUrl += '?userId=' + storedUser.id;
+    }
+
+    const res = await fetch(fetchUrl);
     if (!res.ok) throw new Error('Data not found');
     appState = await res.json();
     
     // Dynamically override user state if a specific user session is active
-    const storedUserStr = localStorage.getItem('currentUser');
     if (storedUserStr) {
       const storedUser = JSON.parse(storedUserStr);
       appState.user.id = storedUser.id;
       appState.user.name = storedUser.name;
       appState.user.email = storedUser.email;
-      appState.dashboard.balance = storedUser.balance;
       
       // Filter out this user from the contacts list so they don't see themselves as a contact
       appState.contacts = appState.contacts.filter(c => c.id !== storedUser.id);

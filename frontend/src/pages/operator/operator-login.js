@@ -7,18 +7,10 @@ import { ICONS, showToast } from '../../utils/ui-core.js';
  */
 
 async function initOperatorLogin() {
-  try {
-    const res = await fetch('/dummy_data.json');
-    const data = await res.json();
-    renderOperatorLoginPage(data.operator);
-  } catch (e) {
-    console.error('Failed to load operator credentials:', e);
-    renderOperatorLoginPage({ email: 'operator@smartbank.local', password: 'password' });
-  }
+  renderOperatorLoginPage();
 }
 
-function renderOperatorLoginPage(creds = { email: 'operator@smartbank.local', password: 'OperatorSmartBank!' }) {
-  const finalCreds = creds || { email: 'operator@smartbank.local', password: 'OperatorSmartBank!' };
+function renderOperatorLoginPage() {
   document.querySelector('#app-auth').innerHTML = `
   <div class="auth-wrapper login-theme">
     <div class="auth-hero" style="background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%);">
@@ -58,18 +50,38 @@ function renderOperatorLoginPage(creds = { email: 'operator@smartbank.local', pa
 
   const form = document.getElementById('operatorLoginForm');
 
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
 
-    if (email === finalCreds.email && password === finalCreds.password) {
+    try {
+      const res = await fetch('http://localhost:3000/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      if (!res.ok) {
+        showToast('Kredensial Operator Salah!', 'error');
+        return;
+      }
+
+      const user = await res.json();
+      
+      if (user.role !== 'operator' && user.role !== 'admin') {
+        showToast('Akses ditolak. Bukan Operator.', 'error');
+        return;
+      }
+
+      localStorage.setItem('operatorUser', JSON.stringify(user));
       showToast('Login Operator Berhasil!');
       setTimeout(() => {
         window.location.href = '/operator-dashboard.html';
       }, 1500);
-    } else {
-      showToast('Kredensial Operator Salah!', 'error');
+
+    } catch (err) {
+      showToast('Koneksi ke database gagal!', 'error');
     }
   });
 }
