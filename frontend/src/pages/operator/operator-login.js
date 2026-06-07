@@ -17,7 +17,8 @@ async function initOperatorLogin() {
   }
 }
 
-function renderOperatorLoginPage(creds) {
+function renderOperatorLoginPage(creds = { email: 'operator@smartbank.local', password: 'OperatorSmartBank!' }) {
+  const finalCreds = creds || { email: 'operator@smartbank.local', password: 'OperatorSmartBank!' };
   document.querySelector('#app-auth').innerHTML = `
   <div class="auth-wrapper login-theme">
     <div class="auth-hero" style="background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%);">
@@ -56,16 +57,13 @@ function renderOperatorLoginPage(creds) {
   </div>`;
 
   const form = document.getElementById('operatorLoginForm');
-  // Auto-fill
-  document.getElementById('email').value = creds.email;
-  document.getElementById('password').value = creds.password;
 
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
 
-    if (email === creds.email && password === creds.password) {
+    if (email === finalCreds.email && password === finalCreds.password) {
       showToast('Login Operator Berhasil!');
       setTimeout(() => {
         window.location.href = '/operator-dashboard.html';

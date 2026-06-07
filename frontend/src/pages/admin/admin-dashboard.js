@@ -1,240 +1,735 @@
 import './admin-dashboard.css';
-import { ICONS, showToast } from '../../utils/ui-core.js';
+import { ICONS, showToast, formatIDR } from '../../utils/ui-core.js';
 
-/**
- * SMARTBANK ADMIN DASHBOARD
- * Core infrastructure for system monitoring and authority management.
- */
-
+// Setup admin body classes
 document.body.classList.add('admin-dashboard-body');
 
-// --- View Definitions ---
-const DASHBOARD_VIEWS = {
-  'System Data': {
-    header: 'System Infrastructure',
-    sub: 'Global monitoring of bank nodes and user identities',
-    stats: [
-      { label: 'Network Latency', value: '12ms', trend: 'OPTIMAL_DELAY' },
-      { label: 'Mainframe CPU', value: '42.5%', trend: 'STABLE_LOAD' },
-      { label: 'Active Nodes', value: '08/08', trend: '100% ONLINE', color: 'var(--neon-cyan)' }
-    ],
-    table: {
-      title: 'Network Node Clusters',
-      headers: ['NODE_IDENTIFIER', 'REGION_LOCATION', 'UPTIME_STATUS', 'LOAD_CAPACITY'],
-      rows: [
-        ['NODE-JKT-01', 'Jakarta, ID', '<span style="color: #10b981;">99.99%</span>', '<span class="status-badge status-verified">OPTIMAL</span>'],
-        ['NODE-SG-02', 'Singapore, SG', '<span style="color: #10b981;">100.00%</span>', '<span class="status-badge status-verified">OPTIMAL</span>']
-      ]
-    },
-    logs: [
-      { time: '21:20', tag: 'SYS', text: 'Node JKT-01 synchronized.' },
-      { time: '21:05', tag: 'SYS', text: 'Daily DB backup completed.' }
-    ]
-  },
-  'User Management': {
-    header: 'Identity Management',
-    sub: 'Authority portal for managing secure user records',
-    stats: [
-      { label: 'Total Verified Identities', value: '1,284', trend: '+12% THIS_MONTH' },
-      { label: 'Pending KYC', value: '12', trend: 'ACTION_REQUIRED' },
-      { label: 'New Today', value: '+45', trend: 'INCREASING', color: 'var(--neon-cyan)' }
-    ],
-    table: {
-      title: 'Identity Verification Queue',
-      headers: ['FULL_LEGAL_NAME', 'SYSTEM_EMAIL', 'REG_DATE', 'KYC_STATUS'],
-      rows: [
-        ['Budi Santoso', 'budi@smartbank.local', '2026-05-01', '<span class="status-badge status-verified">VERIFIED</span>'],
-        ['Joko Widodo', 'joko@smartbank.local', '2026-05-01', '<span class="status-badge status-pending">PENDING</span>']
-      ]
-    },
-    logs: [
-      { time: '21:18', tag: 'KYC', text: 'New user "Joko" awaiting review.' },
-      { time: '20:45', tag: 'USER', text: 'Budi Santoso verified by system.' }
-    ]
-  },
-  'Security Reports': {
-    header: 'Security & Audit Logs',
-    sub: 'Monitoring cryptographic access and system breaches',
-    stats: [
-      { label: 'Global Threat Score', value: 'LOW', trend: 'SECURE_ENV' },
-      { label: 'Blocked IPs', value: '1,024', trend: 'FIREWALL_ACTIVE' },
-      { label: 'SSL Sessions', value: '856', trend: 'ENCRYPTED_CORE', color: 'var(--neon-cyan)' }
-    ],
-    table: {
-      title: 'Threat Intelligence Feed',
-      headers: ['EVENT_TYPE', 'SOURCE_IP', 'TIMESTAMP', 'RISK_LEVEL'],
-      rows: [
-        ['SSL_RENEWAL', 'INTERNAL_CORE', '14:02:11', '<span class="status-badge status-verified">SECURE</span>'],
-        ['BRUTE_FORCE_DETECTED', '45.12.88.2', '13:55:02', '<span class="status-badge status-pending">CRITICAL</span>']
-      ]
-    },
-    logs: [
-      { time: '21:25', tag: 'SEC', text: 'Firewall blocked IP 45.12.88.2.' },
-      { time: '21:10', tag: 'SEC', text: 'SSL Handshake success (v3.0).' }
-    ]
-  }
+// --- Global State ---
+let appState = null;
+let currentTab = 'System Data'; // 'System Data' | 'User Management' | 'Security Reports' | 'Policy Config'
+let userSearchQuery = '';
+let ledgerFilter = 'ALL';
+
+// Economic/System Policies
+let systemPolicies = {
+  feeRate: 1.0,      // 1%
+  taxRate: 2.0,      // 2%
+  loanInterest: 10,  // 10%
+  dailyLimit: 10     // 10 transactions
 };
 
-let appState = null;
+// Simulated Database Records (loaded from dummy_data.json on bootstrap)
+let usersDB = [];
+let ledgerDB = [];
+let systemLogs = [
+  { time: '00:45', tag: 'SYS', text: 'Daily secure database auto-backup completed.' },
+  { time: '00:32', tag: 'SEC', text: 'Cryptographic SSL verification handshake successful.' },
+  { time: '00:15', tag: 'SYS', text: 'Mainframe node cluster synchronized with API Gateway.' },
+  { time: '00:02', tag: 'KYC', text: 'Customer ID USR-00142 (Budi Santoso) auto-verified by KYC rule.' }
+];
 
+// --- Bootstrapping System ---
 async function bootstrap() {
   try {
     const res = await fetch('/dummy_data.json');
+    if (!res.ok) throw new Error('Failed to load dummy data');
     appState = await res.json();
+
+    // Parse dummy users into unified users database array
+    usersDB = [
+      { id: appState.admin.id, name: appState.admin.name, email: appState.admin.email, role: 'admin', balance: 980000000.00, status: 'verified' },
+      { id: appState.manager.id, name: appState.manager.name, email: appState.manager.email, role: 'manager', balance: 0.00, status: 'verified' },
+      { id: appState.operator.id, name: appState.operator.name, email: appState.operator.email, role: 'operator', balance: 0.00, status: 'verified' },
+      { id: appState.teller.id, name: appState.teller.name, email: appState.teller.email, role: 'teller', balance: 0.00, status: 'verified' },
+      { id: appState.user.id, name: appState.user.name, email: appState.user.email, role: 'customer', balance: appState.dashboard.balance, status: 'verified' }
+    ];
+
+    // Add contacts as customers
+    appState.contacts.forEach(c => {
+      usersDB.push({
+        id: c.id,
+        name: c.name,
+        email: c.email || `${c.name.toLowerCase().replace(/\s+/g, '')}@smartbank.local`,
+        role: 'customer',
+        balance: 50000.00,
+        status: 'verified'
+      });
+    });
+
+    // Parse dummy ledger
+    ledgerDB = [...appState.ledger];
+
+    // Load custom policies from dummy collected rate values
+    systemPolicies.feeRate = (appState.bankFees.feeRate * 100) || 1.0;
+    systemPolicies.taxRate = (appState.bankFees.taxRate * 100) || 2.0;
+
+    // Render Base Page
     renderBaseLayout();
-    attachEventListeners();
+    attachGlobalEvents();
   } catch (e) {
-    document.querySelector('#app').innerHTML = '<h2 style="padding:40px">CORE_ERR: Failed to initialize system.</h2>';
-    console.error('Bootstrap error:', e);
+    document.querySelector('#app').innerHTML = `
+      <div style="padding: 80px; text-align: center; color: var(--neon-red);">
+        <h2 style="font-family: var(--font-mono);">[FATAL_ERROR] CORE_SYSTEM_OFFLINE</h2>
+        <p style="color: var(--text-dim); margin-top: 10px;">Gagal memuat basis data administrasi utama. Silakan muat ulang halaman.</p>
+        <button onclick="location.reload()" class="btn-primary" style="margin-top: 20px;">INITIALIZE COLD BOOT</button>
+      </div>
+    `;
+    console.error('System bootstrap failed:', e);
   }
 }
 
+// --- Layout Renderer ---
 function renderBaseLayout() {
   document.querySelector('#app').innerHTML = `
   <div class="dashboard-layout fade-in">
+    <!-- Sidebar Navigation -->
     <aside class="sidebar">
-      <div class="sidebar-logo">${ICONS.shield}</div>
+      <div class="sidebar-logo" title="SmartBank Secure Core">${ICONS.shield}</div>
       <nav class="sidebar-menu">
-        <a href="#" class="menu-item active" title="System Data">${ICONS.database}</a>
-        <a href="#" class="menu-item" title="User Management">${ICONS.users}</a>
-        <a href="#" class="menu-item" title="Security Reports">${ICONS.shield}</a>
+        <a href="#" class="menu-item ${currentTab === 'System Data' ? 'active' : ''}" data-tab="System Data" title="Mainframe Overview">${ICONS.database}</a>
+        <a href="#" class="menu-item ${currentTab === 'User Management' ? 'active' : ''}" data-tab="User Management" title="User Directory & Authority">${ICONS.users}</a>
+        <a href="#" class="menu-item ${currentTab === 'Security Reports' ? 'active' : ''}" data-tab="Security Reports" title="Global Ledger Audits">${ICONS.reports}</a>
+        <a href="#" class="menu-item ${currentTab === 'Policy Config' ? 'active' : ''}" data-tab="Policy Config" title="Policy Configurations">${ICONS.activity}</a>
       </nav>
       <div class="sidebar-bottom">
-        <a href="/admin-login.html" id="logoutBtn" class="menu-item" title="Terminate Session" style="color: var(--neon-red); background: rgba(244, 63, 94, 0.1);">${ICONS.logout}</a>
-        <div class="sidebar-user-avatar">AD</div>
+        <a href="/admin-login.html" id="logoutBtn" class="menu-item" title="Terminate Session" style="color: var(--neon-red); background: var(--neon-red-glow); border-color: rgba(244, 63, 94, 0.2);">${ICONS.logout}</a>
+        <div class="sidebar-user-avatar" title="Role: Admin">AD</div>
       </div>
     </aside>
 
+    <!-- Main Content Area -->
     <div class="main-area">
+      <!-- Top Navigation -->
       <nav class="topnav">
-        <div class="topnav-brand">SMARTBANK // SECURE_CORE_v1.0</div>
-        <div class="topnav-search">${ICONS.search}<input type="text" placeholder="QUERY_SYSTEM_DATA..." /></div>
+        <div class="topnav-brand">
+            <span class="pulse-indicator"></span>
+            SMARTBANK
+        </div>
+        <div class="topnav-search" style="display: ${currentTab === 'User Management' || currentTab === 'Security Reports' ? 'flex' : 'none'};">
+          ${ICONS.search}
+          <input type="text" id="globalSearchInput" placeholder="${currentTab === 'User Management' ? 'Cari nama, email, role, atau ID...' : 'Cari ledger ID atau user...'}" value="${currentTab === 'User Management' ? userSearchQuery : ''}" />
+        </div>
         <div class="topnav-user">
           <div style="text-align: right;">
-            <div class="topnav-user-name" style="font-weight: 700; font-size: 14px;">SUPER_ADMIN</div>
-            <div style="font-size: 10px; color: var(--neon-cyan); font-family: var(--font-mono);">AUTH_LEVEL: 10</div>
+            <div style="font-weight: 800; font-size: 13px; color: #fff; font-family: var(--font-mono);">ADMIN</div>
+
           </div>
           <div class="topnav-user-avatar">SA</div>
         </div>
       </nav>
 
+      <!-- Scrollable Tab Content Container -->
       <div class="page-content">
-        <!-- Content injected here -->
+        <!-- Render Active Tab View -->
+        ${renderActiveTab()}
       </div>
     </div>
   </div>`;
-  
-  switchView('System Data');
+
+  attachTabEvents();
 }
 
-function switchView(viewName) {
-  const data = DASHBOARD_VIEWS[viewName];
-  if (!data) return;
+// --- Render Tab Views ---
+function renderActiveTab() {
+  switch (currentTab) {
+    case 'System Data':
+      return renderSystemOverview();
+    case 'User Management':
+      return renderUserManagement();
+    case 'Security Reports':
+      return renderLedgerAuditor();
+    case 'Policy Config':
+      return renderPolicyConfig();
+    default:
+      return '';
+  }
+}
 
-  const contentArea = document.querySelector('.page-content');
-  contentArea.style.opacity = '0.3';
-  contentArea.style.pointerEvents = 'none';
+// 1. Tab: Mainframe Overview
+function renderSystemOverview() {
+  // Compute basic metrics
+  const totalUsers = usersDB.length;
+  const totalSupply = 100000000; // 100 Million Max Money Supply
 
-  setTimeout(() => {
-    contentArea.innerHTML = `
-      <div class="content-header">
-        <h1>${data.header}</h1>
-        <p>${data.sub}</p>
+  // Calculate total circulating balance (sum of user balances except reserve bank / admin)
+  const circulatingSupply = usersDB
+    .filter(u => u.role !== 'admin')
+    .reduce((sum, u) => sum + u.balance, 0);
+
+  // Reserve Bank holds the remaining pool (Reserve must be >= 98%)
+  const bankReserve = totalSupply - circulatingSupply;
+  const reservePercent = (bankReserve / totalSupply * 100).toFixed(2);
+
+  const collectedFees = appState.bankFees.totalCollected || 4960;
+
+  return `
+    <div class="content-header">
+      <h1>Dashboard Monitor Utama</h1>
+      <p>Global Monitoring system nodes and economic stability indexes</p>
+    </div>
+
+    <!-- Stats Panel -->
+    <div class="stats-grid">
+      <div class="stat-card cyan">
+        <div class="stat-label">Total Supply Maksimal</div>
+        <div class="stat-value" style="color: var(--neon-cyan);">${formatIDR(totalSupply)}</div>
+        <div class="stat-trend trend-up">SYS_LIMIT: 100% REGULATED</div>
+      </div>
+      <div class="stat-card purple">
+        <div class="stat-label">Bank Reserves</div>
+        <div class="stat-value" style="color: var(--neon-purple);">${formatIDR(bankReserve)}</div>
+        <div class="stat-trend trend-up">CAPACITY: ${reservePercent}% [SAFE]</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-label">Circulating Supply</div>
+        <div class="stat-value" style="color: var(--neon-green);">${formatIDR(circulatingSupply)}</div>
+        <div class="stat-trend trend-down">LIQUIDITY_RATIO: ${(circulatingSupply / totalSupply * 100).toFixed(2)}%</div>
+      </div>
+      <div class="stat-card amber">
+        <div class="stat-label">Collected Bank Fees & Taxes</div>
+        <div class="stat-value" style="color: var(--neon-amber);">${formatIDR(collectedFees)}</div>
+        <div class="stat-trend trend-up">FEES: 1% | TAXES: 2%</div>
+      </div>
+    </div>
+
+    <!-- Infrastructure Data Row -->
+    <div class="dashboard-grid">
+      <!-- Node Clusters -->
+      <div class="data-table-card">
+        <div class="table-header">
+          <h2>Active Infrastructure Cluster Nodes</h2>
+          <span style="font-family: var(--font-mono); font-size: 10px; color: var(--neon-cyan);"></span>
+        </div>
+        <div class="table-container">
+          <div class="grid-row grid-head" style="grid-template-columns: 1.5fr 1.5fr 1fr 1fr;">
+            <div>CLUSTER_NODE</div>
+            <div>GEOGRAPHIC_LOCATION</div>
+            <div>CLUSTER_UPTIME</div>
+            <div style="text-align: right;">LOAD_CAPACITY</div>
+          </div>
+          <div class="grid-row" style="grid-template-columns: 1.5fr 1.5fr 1fr 1fr;">
+            <div style="font-family: var(--font-mono); font-weight: 700;">NODE-MAIN-JKT-01</div>
+            <div>Jakarta, Indonesia</div>
+            <div style="color: var(--neon-green); font-family: var(--font-mono);">99.98%</div>
+            <div style="text-align: right;"><span class="status-badge status-verified">OPTIMAL (12%)</span></div>
+          </div>
+          <div class="grid-row" style="grid-template-columns: 1.5fr 1.5fr 1fr 1fr;">
+            <div style="font-family: var(--font-mono); font-weight: 700;">NODE-GATE-SG-02</div>
+            <div>Singapore Cluster</div>
+            <div style="color: var(--neon-green); font-family: var(--font-mono);">100.00%</div>
+            <div style="text-align: right;"><span class="status-badge status-verified">OPTIMAL (8%)</span></div>
+          </div>
+          <div class="grid-row" style="grid-template-columns: 1.5fr 1.5fr 1fr 1fr;">
+            <div style="font-family: var(--font-mono); font-weight: 700;">NODE-BACK-AWS-03</div>
+            <div>Tokyo, Japan (AWS-1)</div>
+            <div style="color: var(--neon-green); font-family: var(--font-mono);">99.99%</div>
+            <div style="text-align: right;"><span class="status-badge status-verified">OPTIMAL (24%)</span></div>
+          </div>
+        </div>
       </div>
 
-      <div class="stats-grid">
-        ${data.stats.map(s => `
-          <div class="stat-card">
-            <div class="stat-label">${s.label}</div>
-            <div class="stat-value" ${s.color ? `style="color: ${s.color}"` : ''}>${s.value}</div>
-            <div class="stat-trend trend-up">${s.trend}</div>
+      <!-- Logs and Instructions Column -->
+      <div style="display: flex; flex-direction: column; gap: 24px;">
+        <!-- Live System Logs -->
+        <div class="activity-card">
+          <div class="activity-header">
+            <h2>Live System Operation Logs</h2>
+            <span style="font-family: var(--font-mono); font-size: 10px; color: var(--neon-cyan); letter-spacing: 0.5px;">FEED_LIVE</span>
           </div>
-        `).join('')}
-      </div>
-
-      <div class="dashboard-grid">
-        <div class="data-table-card">
-          <div class="table-header">
-            <h2 id="tableTitle">${data.table.title}</h2>
-            <div class="table-actions">
-              <button class="btn-secondary" id="exportBtn">DOWNLOAD_LOGS</button>
-              <button class="btn-primary" id="addBtn">+ NEW_RECORD</button>
-            </div>
-          </div>
-          <div class="table-container">
-            <div class="grid-row grid-head">
-              ${data.table.headers.map(h => `<div>${h}</div>`).join('')}
-            </div>
-            ${data.table.rows.map(row => `
-              <div class="grid-row">
-                ${row.map(cell => `<div>${cell}</div>`).join('')}
+          <div class="activity-list">
+            ${systemLogs.map(l => `
+              <div class="log-item">
+                <div class="log-time">${l.time}</div>
+                <div class="log-content">
+                  <span class="log-tag tag-${l.tag.toLowerCase()}">${l.tag}</span>
+                  ${l.text}
+                </div>
               </div>
             `).join('')}
           </div>
         </div>
 
-        <div class="side-content">
-          <div class="activity-card">
-            <div class="activity-header">
-              <h2 style="font-size: 18px; margin: 0;">Recent System Activity</h2>
-              <span style="font-size: 10px; color: var(--neon-cyan); font-family: var(--font-mono);">LIVE_FEED</span>
-            </div>
-            <div class="activity-list">
-              ${data.logs.map(log => `
-                <div class="log-item">
-                  <div class="log-time">${log.time}</div>
-                  <div class="log-content"><span class="log-tag">${log.tag}</span> ${log.text}</div>
-                </div>
-              `).join('')}
-            </div>
+        <!-- Cara Kerja/Purpose of Admin -->
+        <div class="info-panel">
+          <h3>Apa Tugas & Tanggung Jawab Admin?</h3>
+          <div class="info-item">
+            <h4>${ICONS.vault} Regulator Moneter & Money Supply</h4>
+            <p>Admin mengawasi kestabilan nilai uang dalam ekosistem. Sesuai ketentuan SmartBank, total uang dibatasi maksimal Rp 1.000.000.000 (1 Miliar) dengan minimal cadangan bank (Reserves) sebesar 98%.</p>
           </div>
-
-          <div class="info-panel">
-            <h2 style="font-size: 18px; margin: 0 0 20px 0; border-bottom: 1px solid var(--border-glow); padding-bottom: 10px;">Operations Guide</h2>
-            <div class="info-item">
-              <h4>${ICONS.shield} Gatekeeping</h4>
-              <p>Verifikasi identitas nasabah di daftar antrian kiri. Ubah status menjadi 'Verified' untuk memberikan akses perbankan.</p>
-            </div>
-            <div class="info-item">
-              <h4>${ICONS.database} Infrastructure</h4>
-              <p>Pantau 'Vault Volume' dan 'Node Status' di atas. Pastikan ketersediaan sistem 100% untuk seluruh nasabah.</p>
-            </div>
+          <div class="info-item">
+            <h4>${ICONS.users} Manajemen Otoritas & Hak Akses Staff</h4>
+            <p>Admin memiliki wewenang untuk menugaskan hak akses dan peran karyawan (Manager, Teller, dan Operator). Admin juga berhak memverifikasi (KYC) atau membekukan akun nasabah.</p>
+          </div>
+          <div class="info-item">
+            <h4>${ICONS.reports} Audit Ledger & Keamanan Transaksi</h4>
+            <p>Melihat dan melacak seluruh arus dana masuk dan keluar antar-aplikasi (PasarKita, WarungPOS, SupplierHub, LogistiKita) untuk mendeteksi anomali transaksi atau manipulasi saldo.</p>
           </div>
         </div>
       </div>
-    `;
-    
-    contentArea.style.opacity = '1';
-    contentArea.style.pointerEvents = 'all';
-  }, 400);
+    </div>
+  `;
 }
 
-function attachEventListeners() {
-  const menuItems = document.querySelectorAll('.menu-item');
-  menuItems.forEach(item => {
-    item.addEventListener('click', (e) => {
-      const href = item.getAttribute('href');
-      if (href === '#') {
-        e.preventDefault();
-        menuItems.forEach(i => i.classList.remove('active'));
-        item.classList.add('active');
-        switchView(item.getAttribute('title'));
+// 2. Tab: User Directory & Authority Manager
+function renderUserManagement() {
+  // Filter users based on search
+  const filteredUsers = usersDB.filter(u => {
+    const q = userSearchQuery.toLowerCase();
+    return u.name.toLowerCase().includes(q) ||
+      u.email.toLowerCase().includes(q) ||
+      u.id.toLowerCase().includes(q) ||
+      u.role.toLowerCase().includes(q);
+  });
+
+  return `
+    <div class="content-header">
+      <h1>Direktori Pengguna & Hak Akses</h1>
+      <p>Manage user registration, assign staff roles, and execute KYC verification</p>
+    </div>
+
+    <!-- Users Table Card -->
+    <div class="data-table-card">
+      <div class="table-header">
+        <h2>System Directory (${filteredUsers.length} Account Records)</h2>
+        <div class="table-actions">
+          <button class="btn-primary" id="createNewAccountBtn">+ Pendaftaran Akun</button>
+        </div>
+      </div>
+      <div class="table-container">
+        <div class="grid-row grid-head user-layout">
+          <div>ACCOUNT_NAME & IDENTIFIER</div>
+          <div>SYSTEM_EMAIL</div>
+          <div>ROLE_AUTHORITY</div>
+          <div style="text-align: right; padding-right: 8px;">KYC_STATUS</div>
+        </div>
+        ${filteredUsers.map(user => `
+          <div class="grid-row user-layout" data-user-id="${user.id}">
+            <!-- Name & ID -->
+            <div class="user-name-column">
+              <span class="user-name">${user.name}</span>
+              <span class="user-id">${user.id}</span>
+            </div>
+            <!-- Email -->
+            <div class="user-email">${user.email}</div>
+            <!-- Role -->
+            <div>
+              <select class="select-role" data-id="${user.id}">
+                <option value="customer" ${user.role === 'customer' ? 'selected' : ''}>Customer</option>
+                <option value="operator" ${user.role === 'operator' ? 'selected' : ''}>Operator</option>
+                <option value="teller" ${user.role === 'teller' ? 'selected' : ''}>Teller</option>
+                <option value="manager" ${user.role === 'manager' ? 'selected' : ''}>Manager</option>
+                <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
+              </select>
+            </div>
+            <!-- KYC Status Toggle -->
+            <div style="text-align: right;">
+              <span class="status-badge ${user.status === 'verified' ? 'status-verified' : 'status-pending'}" data-action="toggle-kyc" data-id="${user.id}">
+                ${user.status.toUpperCase()}
+              </span>
+            </div>
+          </div>
+        `).join('')}
+        ${filteredUsers.length === 0 ? `
+          <div style="padding: 40px; text-align: center; color: var(--text-dim); font-family: var(--font-mono);">
+            [NO_RECORDS_MATCHING_SEARCH_QUERY]
+          </div>
+        ` : ''}
+      </div>
+    </div>
+  `;
+}
+
+// 3. Tab: Global Ledger Auditor
+function renderLedgerAuditor() {
+  // Filter ledger based on search and type dropdown
+  const filteredLedger = ledgerDB.filter(l => {
+    // Type Filter
+    if (ledgerFilter !== 'ALL' && l.type !== ledgerFilter) return false;
+
+    // Search Query
+    const q = userSearchQuery.toLowerCase();
+    if (!q) return true;
+
+    return l.id.toLowerCase().includes(q) ||
+      l.description.toLowerCase().includes(q) ||
+      l.app.toLowerCase().includes(q) ||
+      (l.from_user && l.from_user.toLowerCase().includes(q)) ||
+      (l.to_user && l.to_user.toLowerCase().includes(q));
+  });
+
+  return `
+    <div class="content-header">
+      <h1>Audit Ledger Transaksi Global</h1>
+      <p>Inspecting immutable single source of truth accounting ledger ledger entries</p>
+    </div>
+
+    <!-- Ledger Card -->
+    <div class="data-table-card">
+      <div class="table-header">
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <h2>Ledger History Logs (${filteredLedger.length} Entries)</h2>
+          <!-- Filter Dropdown -->
+          <select id="ledgerFilterSelect" class="select-role" style="background: rgba(255,255,255,0.05); border-color: var(--border-color);">
+            <option value="ALL" ${ledgerFilter === 'ALL' ? 'selected' : ''}>ALL TRANSACTIONS</option>
+            <option value="PAYMENT" ${ledgerFilter === 'PAYMENT' ? 'selected' : ''}>PAYMENT</option>
+            <option value="TRANSFER_IN" ${ledgerFilter === 'TRANSFER_IN' ? 'selected' : ''}>TRANSFER IN</option>
+            <option value="TRANSFER_OUT" ${ledgerFilter === 'TRANSFER_OUT' ? 'selected' : ''}>TRANSFER OUT</option>
+            <option value="LOAN_DISBURSEMENT" ${ledgerFilter === 'LOAN_DISBURSEMENT' ? 'selected' : ''}>LOAN DISBURSEMENT</option>
+            <option value="LOAN_REPAYMENT" ${ledgerFilter === 'LOAN_REPAYMENT' ? 'selected' : ''}>LOAN REPAYMENT</option>
+            <option value="STIMULUS" ${ledgerFilter === 'STIMULUS' ? 'selected' : ''}>STIMULUS</option>
+          </select>
+        </div>
+        <button class="btn-secondary" id="exportLedgerCsvBtn">EXPORT_CSV</button>
+      </div>
+      <div class="table-container">
+        <div class="grid-row grid-head ledger-layout">
+          <div>ENTRY_ID</div>
+          <div>TRANSACTION_INFO</div>
+          <div>ECO_APP</div>
+          <div>DEBIT/CREDIT</div>
+          <div>TAX_FEE_POOL</div>
+          <div style="text-align: right; padding-right: 8px;">AUDIT_HASH</div>
+        </div>
+        ${filteredLedger.map(log => {
+    // Format signs
+    let amountClass = 'amount-positive';
+    let amountSign = '+';
+    if (log.type === 'PAYMENT' || log.type === 'TRANSFER_OUT' || log.type === 'LOAN_REPAYMENT') {
+      amountClass = 'amount-negative';
+      amountSign = '-';
+    }
+
+    const totalFees = parseFloat(log.fee_bank) + parseFloat(log.fee_pajak);
+
+    return `
+            <div class="grid-row ledger-layout">
+              <!-- ID -->
+              <div style="font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--neon-cyan);">${log.id}</div>
+              <!-- Info -->
+              <div style="display: flex; flex-direction: column; gap: 3px;">
+                <span style="font-weight: 600; font-size: 13px;">${log.description}</span>
+                <span style="font-size: 10px; color: var(--text-dim);">${new Date(log.timestamp).toLocaleString('id-ID')}</span>
+              </div>
+              <!-- App Source -->
+              <div><span class="role-badge role-customer" style="font-size: 9px; padding: 2px 6px;">${log.app}</span></div>
+              <!-- Amount -->
+              <div class="ledger-amount ${amountClass}" style="font-size: 13px;">
+                ${amountSign}${formatIDR(log.amount)}
+              </div>
+              <!-- Fee/Tax Pool -->
+              <div style="font-family: var(--font-mono); font-size: 11px; color: var(--text-dim);">
+                Fee: ${formatIDR(log.fee_bank)}<br>
+                Tax: ${formatIDR(log.fee_pajak)}
+              </div>
+              <!-- Verification Badge -->
+              <div style="text-align: right;">
+                <span class="status-badge status-verified" style="font-size: 8px; font-family: var(--font-mono); padding: 2px 6px; letter-spacing: 0.5px;">
+                  VERIFIED
+                </span>
+              </div>
+            </div>
+          `;
+  }).join('')}
+        ${filteredLedger.length === 0 ? `
+          <div style="padding: 40px; text-align: center; color: var(--text-dim); font-family: var(--font-mono);">
+            [NO_LEDGER_ENTRIES_FOUND]
+          </div>
+        ` : ''}
+      </div>
+    </div>
+  `;
+}
+
+// 4. Tab: Policy Config Page
+function renderPolicyConfig() {
+  return `
+    <div class="content-header">
+      <h1>Konfigurasi Aturan & Parameter Moneter</h1>
+      <p>Fine-tune transactional fees, system taxes, interest parameters, and client transaction constraints</p>
+    </div>
+
+    <div class="policy-grid">
+      <!-- Fee Card -->
+      <div class="policy-card">
+        <h3 class="policy-title">Biaya Layanan Bank (Transaction Fee)</h3>
+        <p class="policy-desc">Persentase potongan bank untuk memproses setiap transaksi keuangan di ekosistem SmartBank.</p>
+        <div class="policy-slider-container">
+          <div class="policy-value-row">
+            <span>RATES</span>
+            <span id="label-fee">${systemPolicies.feeRate.toFixed(1)}%</span>
+          </div>
+          <input type="range" min="0" max="5" step="0.1" value="${systemPolicies.feeRate}" class="policy-slider" id="slider-fee" />
+          <div class="policy-limits">
+            <span>MIN: 0.0%</span>
+            <span>MAX: 5.0%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tax Card -->
+      <div class="policy-card">
+        <h3 class="policy-title">Pajak Sistem (Ecosystem Tax)</h3>
+        <p class="policy-desc">Pajak otomatis yang ditarik per transaksi sebagai sarana penarikan uang beredar (Money Sink) untuk mencegah inflasi.</p>
+        <div class="policy-slider-container">
+          <div class="policy-value-row">
+            <span>RATES</span>
+            <span id="label-tax">${systemPolicies.taxRate.toFixed(1)}%</span>
+          </div>
+          <input type="range" min="0" max="10" step="0.2" value="${systemPolicies.taxRate}" class="policy-slider" id="slider-tax" />
+          <div class="policy-limits">
+            <span>MIN: 0.0%</span>
+            <span>MAX: 10.0%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loan Interest Card -->
+      <div class="policy-card">
+        <h3 class="policy-title">Bunga Pinjaman (Loan Interest Rate)</h3>
+        <p class="policy-desc">Tingkat bunga mingguan yang dibebankan kepada debitur/nasabah yang meminjam dana ke bank reserve.</p>
+        <div class="policy-slider-container">
+          <div class="policy-value-row">
+            <span>RATES</span>
+            <span id="label-interest">${systemPolicies.loanInterest}%</span>
+          </div>
+          <input type="range" min="5" max="25" step="1" value="${systemPolicies.loanInterest}" class="policy-slider" id="slider-interest" />
+          <div class="policy-limits">
+            <span>MIN: 5%</span>
+            <span>MAX: 25%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Daily limit Card -->
+      <div class="policy-card">
+        <h3 class="policy-title">Batas Transaksi Harian (Daily Tx Limit)</h3>
+        <p class="policy-desc">Batas maksimal frekuensi transaksi yang boleh dieksekusi oleh setiap nasabah per hari.</p>
+        <div class="policy-slider-container">
+          <div class="policy-value-row">
+            <span>TX_LIMIT</span>
+            <span id="label-limit">${systemPolicies.dailyLimit} Tx</span>
+          </div>
+          <input type="range" min="5" max="50" step="1" value="${systemPolicies.dailyLimit}" class="policy-slider" id="slider-limit" />
+          <div class="policy-limits">
+            <span>MIN: 5 Tx</span>
+            <span>MAX: 50 Tx</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Apply Policy Settings -->
+    <div style="text-align: right;">
+      <button class="btn-primary" id="savePoliciesBtn" style="padding: 14px 28px; font-size: 13px;">Terapkan Kebijakan Baru</button>
+    </div>
+  `;
+}
+
+// --- Bind Tab and Interaction Events ---
+function attachTabEvents() {
+  // Tab Switchers
+  document.querySelectorAll('[data-tab]').forEach(tab => {
+    tab.addEventListener('click', (e) => {
+      e.preventDefault();
+      currentTab = tab.getAttribute('data-tab');
+      renderBaseLayout();
+    });
+  });
+
+  // Search input binding
+  const searchInput = document.getElementById('globalSearchInput');
+  if (searchInput) {
+    searchInput.focus();
+    // Maintain cursor position at the end of the text
+    const val = searchInput.value;
+    searchInput.value = '';
+    searchInput.value = val;
+
+    searchInput.addEventListener('input', (e) => {
+      userSearchQuery = e.target.value;
+      const content = document.querySelector('.page-content');
+      if (content) {
+        content.innerHTML = renderActiveTab();
+        attachTableActions(); // Bind action clicks within tables
+      }
+    });
+  }
+
+  attachTableActions();
+}
+
+function attachTableActions() {
+  // 1. Role Change Handler
+  document.querySelectorAll('.select-role').forEach(select => {
+    select.addEventListener('change', (e) => {
+      const userId = e.target.getAttribute('data-id');
+      const newRole = e.target.value;
+      const user = usersDB.find(u => u.id === userId);
+
+      if (user) {
+        const oldRole = user.role;
+        user.role = newRole;
+
+        // Log to system logs
+        const timeNow = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        systemLogs.unshift({
+          time: timeNow,
+          tag: 'KYC',
+          text: `User authority changed: "${user.name}" (${user.id}) elevated from ${oldRole.toUpperCase()} to ${newRole.toUpperCase()}.`
+        });
+
+        showToast(`Perubahan Hak Akses Berhasil: ${user.name} diubah menjadi ${newRole.toUpperCase()}`);
+
+        // If system overview is rendered, update stats. Just render content again
+        if (currentTab === 'System Data') {
+          renderBaseLayout();
+        }
       }
     });
   });
 
+  // 2. KYC Toggle Handler
+  document.querySelectorAll('[data-action="toggle-kyc"]').forEach(badge => {
+    badge.addEventListener('click', (e) => {
+      const userId = e.target.getAttribute('data-id');
+      const user = usersDB.find(u => u.id === userId);
+      if (user) {
+        const oldStatus = user.status;
+        user.status = oldStatus === 'verified' ? 'pending' : 'verified';
+
+        const timeNow = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        systemLogs.unshift({
+          time: timeNow,
+          tag: 'KYC',
+          text: `Account Verification update: "${user.name}" KYC status modified to ${user.status.toUpperCase()}.`
+        });
+
+        showToast(`KYC Status "${user.name}" diubah menjadi ${user.status.toUpperCase()}`);
+
+        // Re-render table state
+        const content = document.querySelector('.page-content');
+        if (content) {
+          content.innerHTML = renderActiveTab();
+          attachTableActions();
+        }
+      }
+    });
+  });
+
+  // 3. Ledger Filter Dropdown Handler
+  const ledgerSelect = document.getElementById('ledgerFilterSelect');
+  if (ledgerSelect) {
+    ledgerSelect.addEventListener('change', (e) => {
+      ledgerFilter = e.target.value;
+      const content = document.querySelector('.page-content');
+      if (content) {
+        content.innerHTML = renderActiveTab();
+        attachTableActions();
+      }
+    });
+  }
+
+  // 4. Policy Sliders live labels
+  const sliders = [
+    { id: 'slider-fee', labelId: 'label-fee', format: (val) => `${parseFloat(val).toFixed(1)}%` },
+    { id: 'slider-tax', labelId: 'label-tax', format: (val) => `${parseFloat(val).toFixed(1)}%` },
+    { id: 'slider-interest', labelId: 'label-interest', format: (val) => `${val}%` },
+    { id: 'slider-limit', labelId: 'label-limit', format: (val) => `${val} Tx` }
+  ];
+
+  sliders.forEach(s => {
+    const sliderEl = document.getElementById(s.id);
+    const labelEl = document.getElementById(s.labelId);
+    if (sliderEl && labelEl) {
+      sliderEl.addEventListener('input', (e) => {
+        labelEl.textContent = s.format(e.target.value);
+      });
+    }
+  });
+
+  // 5. Policy Save Button
+  const saveBtn = document.getElementById('savePoliciesBtn');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', () => {
+      const feeVal = parseFloat(document.getElementById('slider-fee').value);
+      const taxVal = parseFloat(document.getElementById('slider-tax').value);
+      const interestVal = parseInt(document.getElementById('slider-interest').value);
+      const limitVal = parseInt(document.getElementById('slider-limit').value);
+
+      systemPolicies = {
+        feeRate: feeVal,
+        taxRate: taxVal,
+        loanInterest: interestVal,
+        dailyLimit: limitVal
+      };
+
+      const timeNow = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+      systemLogs.unshift({
+        time: timeNow,
+        tag: 'SYS',
+        text: `Global financial parameters updated: FEE=${feeVal}%, TAX=${taxVal}%, INTEREST=${interestVal}%, DAILY_LIMIT=${limitVal}Tx.`
+      });
+
+      showToast('Konfigurasi Kebijakan Moneter Berhasil Diperbarui!');
+    });
+  }
+
+  // 6. Export ledger CSV click
+  const exportCsvBtn = document.getElementById('exportLedgerCsvBtn');
+  if (exportCsvBtn) {
+    exportCsvBtn.addEventListener('click', () => {
+      showToast('Mengekspor berkas ledger_audit_log.csv...', 'info');
+    });
+  }
+
+  // 7. Create New Account click
+  const newAccountBtn = document.getElementById('createNewAccountBtn');
+  if (newAccountBtn) {
+    newAccountBtn.addEventListener('click', () => {
+      const name = prompt("Masukkan Nama Lengkap Nasabah Baru:");
+      if (!name) return;
+      const email = prompt("Masukkan Email Nasabah Baru:");
+      if (!email) return;
+
+      const newId = 'USR-' + Math.floor(10000 + Math.random() * 90000);
+      const newRecord = {
+        id: newId,
+        name: name,
+        email: email,
+        role: 'customer',
+        balance: 50000.00,
+        status: 'verified'
+      };
+
+      usersDB.push(newRecord);
+
+      const timeNow = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+      systemLogs.unshift({
+        time: timeNow,
+        tag: 'KYC',
+        text: `New customer account registered: "${name}" (${newId}) with starting balance Rp 50.000.`
+      });
+
+      showToast(`Pendaftaran Berhasil: ${name} (${newId})`);
+
+      // Re-render table
+      const content = document.querySelector('.page-content');
+      if (content) {
+        content.innerHTML = renderActiveTab();
+        attachTableActions();
+      }
+    });
+  }
+}
+
+function attachGlobalEvents() {
   document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
     e.preventDefault();
-    window.location.href = '/admin-login.html';
-  });
-
-  document.getElementById('exportBtn')?.addEventListener('click', () => {
-    showToast('Exporting system logs...');
-  });
-
-  document.getElementById('addBtn')?.addEventListener('click', () => {
-    showToast('Initialize new record...', 'info');
+    if (confirm('Anda yakin ingin memutus koneksi session Admin?')) {
+      window.location.href = '/admin-login.html';
+    }
   });
 }
 
+// Start Mainboard
 bootstrap();

@@ -56,9 +56,6 @@ function renderManagerLoginPage(creds) {
   </div>`;
 
   const form = document.getElementById('managerLoginForm');
-  // Auto-fill for convenience
-  document.getElementById('email').value = creds.email;
-  document.getElementById('password').value = creds.password;
 
   form.addEventListener('submit', (e) => {
     e.preventDefault();

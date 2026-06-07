@@ -23,13 +23,61 @@
     "email": "teller@smartbank.local",
     "password": "TellerSmartBank!"
   },
+  "operator": {
+    "name": "Operator Support",
+    "id": "OPR-01",
+    "email": "operator@smartbank.local",
+    "password": "OperatorSmartBank!"
+  },
   "contacts": [
-    { "id": "USR-00089", "name": "Rina Wijaya", "initial": "R", "color": "#8b5cf6" },
-    { "id": "USR-00023", "name": "Ahmad Fauzi", "initial": "A", "color": "#0891b2" },
-    { "id": "USR-00156", "name": "Siti Nurhaliza", "initial": "S", "color": "#d946ef" },
-    { "id": "USR-00071", "name": "Dedi Kurniawan", "initial": "D", "color": "#ea580c" },
-    { "id": "USR-00034", "name": "Maya Putri", "initial": "M", "color": "#059669" },
-    { "id": "USR-00112", "name": "Rizky Pratama", "initial": "R", "color": "#2563eb" }
+    {
+      "id": "USR-00089",
+      "name": "Rina Wijaya",
+      "initial": "R",
+      "color": "#8b5cf6",
+      "email": "rina@smartbank.local",
+      "password": "RinaSmartBank!"
+    },
+    {
+      "id": "USR-00023",
+      "name": "Ahmad Fauzi",
+      "initial": "A",
+      "color": "#0891b2",
+      "email": "ahmad@smartbank.local",
+      "password": "AhmadSmartBank!"
+    },
+    {
+      "id": "USR-00156",
+      "name": "Siti Nurhaliza",
+      "initial": "S",
+      "color": "#d946ef",
+      "email": "siti@smartbank.local",
+      "password": "SitiSmartBank!"
+    },
+    {
+      "id": "USR-00071",
+      "name": "Dedi Kurniawan",
+      "initial": "D",
+      "color": "#ea580c",
+      "email": "dedi@smartbank.local",
+      "password": "DediSmartBank!"
+    },
+    {
+      "id": "USR-00034",
+      "name": "Maya Putri",
+      "initial": "M",
+      "color": "#059669",
+      "email": "maya@smartbank.local",
+      "password": "MayaSmartBank!"
+    },
+    {
+      "id": "USR-00112",
+      "name": "Rizky Pratama",
+      "initial": "R",
+      "color": "#2563eb",
+      "email": "rizky@smartbank.local",
+      "password": "RizkySmartBank!"
+    }
   ],
   "dashboard": {
     "balance": 47350,
