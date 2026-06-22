@@ -9,7 +9,7 @@ Dokumen ini berisi rangkuman kendala teknis dan logis yang dihadapi selama prose
 Pada tahap awal, aplikasi masih menggunakan data statis berbasis file JSON (*dummy data*). Hal ini menyulitkan pengelolaan *state*, relasi data yang kompleks (seperti riwayat transaksi dan *ledger*), serta tidak memenuhi standar aplikasi skala produksi. Transisi menuju sistem berbasis database relasional dengan tetap menjaga kestabilan *endpoint* yang sudah ada menjadi tantangan tersendiri.
 
 **Solusi:**
-Melakukan perombakan (*refactoring*) arsitektur backend dengan menggunakan framework **Go Fiber** agar lebih efisien dan terstruktur (*Clean Code/MVC*). Sistem kemudian diintegrasikan dengan database persisten (PostgreSQL/MySQL) menggunakan ORM untuk mengelola manipulasi data. Seluruh *endpoint* fetching data (seperti manajemen saldo dan dashboard) diubah untuk mengambil data mutakhir langsung dari database, sehingga menghilangkan *hardcoded stubs*.
+Melakukan perombakan (*refactoring*) arsitektur backend dengan menggunakan framework **Go Fiber** agar lebih efisien dan terstruktur (*Clean Code/MVC*). Sistem kemudian diintegrasikan dengan database persisten (PostgreSQL/MySQL) menggunakan ORM untuk mengelola manipulasi data. Seluruh *endpoint* fetching data (seperti manajemen saldo dan dashboard) diubah untuk mengambil data mutakhir langsung dari database. Di sisi *frontend*, semua referensi terhadap `dummy_data.json` berhasil dihapus sepenuhnya melalui mekanisme *script replacement* otomatis, sehingga UI kini 100% tersambung ke API *backend* yang sesungguhnya.
 
 ---
 

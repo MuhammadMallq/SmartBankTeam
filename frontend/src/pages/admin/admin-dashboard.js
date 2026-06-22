@@ -18,7 +18,7 @@ let systemPolicies = {
   dailyLimit: 10     // 10 transactions
 };
 
-// Simulated Database Records (loaded from dummy_data.json on bootstrap)
+// Simulated Database Records (loaded from API on bootstrap)
 let usersDB = [];
 let ledgerDB = [];
 let systemLogs = [
