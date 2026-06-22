@@ -1,0 +1,34 @@
+digraph ClassDiagramAfter {
+    rankdir=TB;
+    node [shape=record, fontname="Arial", fontsize=10];
+    edge [arrowhead=vee, fontname="Arial", fontsize=9];
+
+    main [label="{main.go|+ main()\l}"];
+    config [label="{config/config.go|+ DatabaseURL string\l+ Port string\l+ LoadConfig() Config\l}"];
+    database [label="{database/database.go|+ DB *gorm.DB\l+ ConnectDB(dsn)\l}"];
+    models [label="{models/models.go|User struct\lLedger struct\lBankFee struct\lNews struct\l}"];
+    routes [label="{routes/routes.go|+ SetupRoutes(app, handler)\l}"];
+    handlers [label="{handlers/handlers.go|+ Handler struct\l+ GetDashboardData()\l+ ProcessTransfer()\l+ adminHandlers...\l}"];
+    
+    subgraph cluster_services {
+        label = "Services Layer";
+        style = dashed;
+        color = blue;
+        txService [label="{transaction_service.go|+ Transfer(from, to, amount) error\l}"];
+        dbService [label="{dashboard_service.go|+ GetDashboardData(userID) DashboardData\l}"];
+    }
+
+    validators [label="{validators/validators.go|+ ValidateTransferInput() error\l}"];
+
+    main -> config;
+    main -> database;
+    main -> routes;
+    routes -> handlers;
+    handlers -> txService;
+    handlers -> dbService;
+    handlers -> validators;
+    txService -> database;
+    dbService -> database;
+    txService -> models;
+    dbService -> models;
+}

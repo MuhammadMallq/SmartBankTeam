@@ -1,0 +1,15 @@
+digraph ClassDiagramBefore {
+    rankdir=TB;
+    node [shape=record, fontname="Arial", fontsize=10];
+    edge [arrowhead=vee, fontname="Arial", fontsize=9];
+
+    main [label="{main.go (Monolith)|+ main()\l+ seedNews()\l+ seedHighAssetUsers()\l- GET /api/dashboard/data handler\l- POST /api/transfer handler\l- GET /api/admin/users handler\l- GET /api/admin/ledgers handler\l- GET /api/admin/fees handler\l- GET /api/admin/stats handler\l- PUT /api/admin/users/:id/role handler\l- PUT /api/admin/users/:id/status handler\l- POST /api/admin/users handler\l- POST /api/register handler\l- POST /api/login handler\l}"];
+    
+    database [label="{database.go|+ DB *gorm.DB\l+ ConnectDB()\l}"];
+    
+    models [label="{models.go|User struct\lLedger struct\lBankFee struct\lNews struct\l}"];
+    
+    main -> database [label="Mengambil DB global"];
+    main -> models [label="Menggunakan struct"];
+    database -> models [label="AutoMigrate()"];
+}
