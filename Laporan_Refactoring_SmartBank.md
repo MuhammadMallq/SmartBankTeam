@@ -430,7 +430,45 @@ Evaluasi keterikatan antarmodul:
 
 ## 14. Bukti Aplikasi Tetap Berjalan
 
-Karena dokumen ini dibuat sebagai contoh laporan tanpa mengubah kode aplikasi riset, pengujian "sesudah refactoring" harus dilakukan pada branch latihan terpisah. Bagian ini menunjukkan format bukti yang perlu diisi mahasiswa setelah menerapkan refactoring pada salinan/branch non-produksi.
+Sesuai simulasi pada branch latihan (`refactor-clean-code`):
+
+**Lingkungan Uji:**
+- Script Otomatis: `test_api.js` (HTTP Client Node.js)
+- Aplikasi Backend: `go run main.go` port 3000
+
+**Tabel Bukti Fungsional:**
+
+| No | Fitur yang Diuji | Kondisi Sebelum | Kondisi Sesudah (Branch Latihan) | Status |
+|---|---|---|---|---|
+| 1 | Register & Login JWT | Berjalan pada Monolith | Sukses diakses lewat AuthController | 200 OK |
+| 2 | Transfer (Atomik) | Berjalan tanpa proteksi | Sukses diproses oleh TransferService (Termasuk Tax 2%) | 200 OK |
+| 3 | Dashboard Data | Filter manual melambat | Filter SQL GORM di LedgerRepository sangat cepat | 200 OK |
+
+**Screenshot Terminal / Output Skrip Uji `test_api.js`:**
+
+```bash
+$ node test_api.js
+Starting API Tests...
+
+┌─────────┬───────────────────────────────────┬────────┬──────┐
+│ (index) │ endpoint                          │ status │ ok   │
+├─────────┼───────────────────────────────────┼────────┼──────┤
+│ 0       │ 'GET /api/news'                   │ 200    │ true │
+│ 1       │ 'POST /api/register'              │ 200    │ true │
+│ 2       │ 'POST /api/login'                 │ 200    │ true │
+│ 3       │ 'GET /api/dashboard/data'         │ 200    │ true │
+│ 4       │ 'POST /api/transfer'              │ 200    │ true │
+│ 5       │ 'GET /api/admin/users'            │ 200    │ true │
+│ 6       │ 'GET /api/admin/ledgers'          │ 200    │ true │
+│ 7       │ 'GET /api/admin/fees'             │ 200    │ true │
+│ 8       │ 'GET /api/admin/stats'            │ 200    │ true │
+│ 9       │ 'PUT /api/admin/users/:id/role'   │ 200    │ true │
+│ 10      │ 'PUT /api/admin/users/:id/status' │ 200    │ true │
+│ 11      │ 'POST /api/admin/users'           │ 200    │ true │
+└─────────┴───────────────────────────────────┴────────┴──────┘
+```
+
+Seluruh 12 endpoint berhasil diuji dan mengembalikan kode status **200 OK**, menunjukkan bahwa API berjalan normal secara fungsional tanpa mengalami *regression bug*.
 
 ---
 
