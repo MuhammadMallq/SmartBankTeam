@@ -1,0 +1,358 @@
+basePath: /
+definitions:
+  controllers.DashboardData:
+    properties:
+      admin:
+        $ref: '#/definitions/models.User'
+      bankFees:
+        additionalProperties: true
+        type: object
+      contacts:
+        items:
+          $ref: '#/definitions/models.User'
+        type: array
+      dashboard:
+        additionalProperties: true
+        type: object
+      ledger:
+        items:
+          $ref: '#/definitions/models.Ledger'
+        type: array
+      manager:
+        $ref: '#/definitions/models.User'
+      news:
+        items:
+          $ref: '#/definitions/models.News'
+        type: array
+      operator:
+        $ref: '#/definitions/models.User'
+      teller:
+        $ref: '#/definitions/models.User'
+      user:
+        $ref: '#/definitions/models.User'
+    type: object
+  controllers.LoginReq:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  controllers.RegisterReq:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+    type: object
+  controllers.TransferReq:
+    properties:
+      amount:
+        type: number
+      to_name:
+        type: string
+      to_user:
+        type: string
+    type: object
+  models.BankFee:
+    properties:
+      description:
+        type: string
+      fee_amount:
+        type: number
+      id:
+        type: string
+      ledger_ref:
+        type: string
+      status:
+        type: string
+      tax_amount:
+        type: number
+      timestamp:
+        type: string
+      total_charge:
+        type: number
+      transaction_amount:
+        type: number
+      type:
+        type: string
+    type: object
+  models.Ledger:
+    properties:
+      amount:
+        type: number
+      app:
+        type: string
+      balance_after:
+        type: number
+      balance_before:
+        type: number
+      description:
+        type: string
+      fee_bank:
+        type: number
+      fee_pajak:
+        type: number
+      from_user:
+        type: string
+      id:
+        type: string
+      status:
+        type: string
+      timestamp:
+        type: string
+      to_user:
+        type: string
+      total_deduction:
+        type: number
+      type:
+        type: string
+    type: object
+  models.News:
+    properties:
+      id:
+        type: string
+      source:
+        type: string
+      summary:
+        type: string
+      timestamp:
+        type: string
+      title:
+        type: string
+      url:
+        type: string
+    type: object
+  models.User:
+    properties:
+      balance:
+        type: number
+      color:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      initial:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      role:
+        description: '"user", "admin", "manager", "teller", "operator"'
+        type: string
+      status:
+        type: string
+    type: object
+host: localhost:3000
+info:
+  contact: {}
+  description: REST API for SmartBank Application
+  title: SmartBank API
+  version: "1.0"
+paths:
+  /api/admin/fees:
+    get:
+      consumes:
+      - application/json
+      description: Fetch all bank fees (Admin only)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.BankFee'
+            type: array
+      summary: Get All Bank Fees
+      tags:
+      - Admin
+  /api/admin/ledgers:
+    get:
+      consumes:
+      - application/json
+      description: Fetch all ledger records (Admin only)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Ledger'
+            type: array
+      summary: Get All Ledgers
+      tags:
+      - Admin
+  /api/admin/stats:
+    get:
+      consumes:
+      - application/json
+      description: Fetch overall statistics
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get Admin Stats
+      tags:
+      - Admin
+  /api/admin/users:
+    get:
+      consumes:
+      - application/json
+      description: Fetch all users (Admin only)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.User'
+            type: array
+      summary: Get All Users
+      tags:
+      - Admin
+  /api/dashboard/data:
+    get:
+      consumes:
+      - application/json
+      description: Get comprehensive data for the user dashboard based on JWT
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controllers.DashboardData'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Dashboard Data
+      tags:
+      - Dashboard
+  /api/login:
+    post:
+      consumes:
+      - application/json
+      description: Login and receive a JWT token
+      parameters:
+      - description: Login Credentials
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.LoginReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Login user
+      tags:
+      - Auth
+  /api/news:
+    get:
+      consumes:
+      - application/json
+      description: Fetch all news articles
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.News'
+            type: array
+      summary: Get All News
+      tags:
+      - Public
+  /api/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user with email and password
+      parameters:
+      - description: Registration Details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.RegisterReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Register a new user
+      tags:
+      - Auth
+  /api/transfer:
+    post:
+      consumes:
+      - application/json
+      description: Transfer money from logged-in user to another user
+      parameters:
+      - description: Transfer Details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.TransferReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Transfer Money
+      tags:
+      - Transactions
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

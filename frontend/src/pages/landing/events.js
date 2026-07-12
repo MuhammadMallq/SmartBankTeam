@@ -89,14 +89,17 @@ export async function processTransfer(event, appState, renderApp) {
     const btn = document.getElementById('trf-step2-btn');
     if (btn) btn.disabled = true;
 
+    const token = localStorage.getItem('token');
     const req = await fetch('http://localhost:3000/api/transfer', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` 
+      },
       body: JSON.stringify({
         amount: amount,
         to_user: selectedContact.id,
-        to_name: selectedContact.name,
-        from_user: appState.user.id
+        to_name: selectedContact.name
       })
     });
     
@@ -104,12 +107,11 @@ export async function processTransfer(event, appState, renderApp) {
 
     // Refetch the data to get updated balance and history
     let fetchUrl = 'http://localhost:3000/api/dashboard/data';
-    const storedUserStr = localStorage.getItem('currentUser');
-    if (storedUserStr) {
-      const storedUser = JSON.parse(storedUserStr);
-      fetchUrl += '?userId=' + storedUser.id;
-    }
-    const res = await fetch(fetchUrl);
+    const res = await fetch(fetchUrl, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
     const newData = await res.json();
     
     // Update local appState with new values
@@ -174,6 +176,7 @@ export function bindCommonEvents(navigateTo, appState, renderApp) {
     e.target.textContent = 'Memutus koneksi...';
     e.target.style.opacity = '0.7';
     localStorage.removeItem('currentUser');
+    localStorage.removeItem('token');
     setTimeout(() => { window.location.href = '/'; }, 800);
   });
 }
@@ -209,6 +212,21 @@ export function bindDashboardEvents(appState, renderApp) {
         amtEl.value = pill.getAttribute('data-amount');
         updateFeeInfo();
       }
+    });
+  });
+
+  // UI button handlers
+  document.getElementById('btn-lihat-semua')?.addEventListener('click', () => {
+    document.querySelector('a[data-page="ledger"]')?.click();
+  });
+
+  document.getElementById('btn-filter-minggu')?.addEventListener('change', () => {
+    showPageToast('Fitur filter data historis sedang dalam pengembangan.');
+  });
+
+  document.querySelectorAll('.btn-pager').forEach(btn => {
+    btn.addEventListener('click', () => {
+      showPageToast('Data telah ditampilkan seluruhnya.');
     });
   });
 }

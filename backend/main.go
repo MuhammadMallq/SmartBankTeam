@@ -1,373 +1,66 @@
 package main
 
 import (
-	"fmt"
 	"log"
+	"os"
 	"time"
-	"smartbank-backend/database"
-	"smartbank-backend/models"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/swagger"
+	"golang.org/x/crypto/bcrypt"
+
+	"smartbank-backend/database"
+	"smartbank-backend/models"
+	"smartbank-backend/routes"
+
+	_ "smartbank-backend/docs" // Import swagger docs
 )
 
-type DashboardData struct {
-	User      models.User       `json:"user"`
-	Admin     models.User       `json:"admin"`
-	Manager   models.User       `json:"manager"`
-	Teller    models.User       `json:"teller"`
-	Operator  models.User       `json:"operator"`
-	Contacts  []models.User     `json:"contacts"`
-	Dashboard map[string]interface{} `json:"dashboard"`
-	Ledger    []models.Ledger   `json:"ledger"`
-	BankFees  map[string]interface{} `json:"bankFees"`
-	News      []models.News     `json:"news"`
-}
-
+// @title SmartBank API
+// @version 1.0
+// @description REST API for SmartBank Application
+// @host localhost:3000
+// @BasePath /
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
 func main() {
 	database.ConnectDB()
-	database.DB.Exec("UPDATE users SET balance = balance + 50000 WHERE role IN ('user', 'contact') AND balance <= 0")
+
+	// Seed data
 	seedNews()
 	seedHighAssetUsers()
 
 	app := fiber.New()
+
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: "*",
-		AllowHeaders: "Origin, Content-Type, Accept",
+		AllowOrigins: "*", // In production, this should be specific origins
+		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
 	}))
 
-	app.Get("/api/dashboard/data", func(c *fiber.Ctx) error {
-		var users []models.User
-		database.DB.Find(&users)
+	// Swagger route
+	app.Get("/swagger/*", swagger.HandlerDefault)
 
-		var data DashboardData
-		data.Contacts = []models.User{}
+	// Setup Routes
+	routes.SetupRoutes(app)
 
-		reqUserId := c.Query("userId", "USR-00142")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "3000"
+	}
 
-		for _, u := range users {
-			switch u.Role {
-			case "admin":
-				data.Admin = u
-			case "manager":
-				data.Manager = u
-			case "teller":
-				data.Teller = u
-			case "operator":
-				data.Operator = u
-			}
-			
-			if u.ID == reqUserId {
-				data.User = u
-			} else if u.Role == "contact" || u.Role == "user" {
-				data.Contacts = append(data.Contacts, u)
-			}
-		}
-
-		var ledgers []models.Ledger
-		database.DB.Find(&ledgers)
-		data.Ledger = ledgers
-
-		var fees []models.BankFee
-		database.DB.Find(&fees)
-
-		// Calculate daily usage, income, expense, and history from ledgers
-		usedTx := 0
-		income := 0.0
-		expense := 0.0
-		history := []map[string]interface{}{}
-		
-		for i := len(ledgers) - 1; i >= 0; i-- {
-			l := ledgers[i]
-			isParticipant := false
-			amountDisplay := 0.0
-
-			if l.ToUser == data.User.ID {
-				income += l.Amount
-				amountDisplay = l.Amount
-				isParticipant = true
-			}
-			if l.FromUser == data.User.ID {
-				expense += l.TotalDeduction
-				amountDisplay = -l.TotalDeduction
-				isParticipant = true
-				if l.Timestamp.Day() == time.Now().Day() {
-					usedTx++
-				}
-			}
-
-			if isParticipant {
-				// formatted time
-				tStr := l.Timestamp.Format("15:04")
-				if l.Timestamp.IsZero() {
-					tStr = "00:00"
-				}
-				history = append(history, map[string]interface{}{
-					"id":     l.ID,
-					"title":  l.Description,
-					"app":    l.App,
-					"time":   tStr,
-					"status": l.Status,
-					"amount": amountDisplay,
-				})
-			}
-		}
-
-		// Create dashboard stub
-		data.Dashboard = map[string]interface{}{
-			"balance": data.User.Balance,
-			"dailyTransactions": map[string]interface{}{
-				"used": usedTx, "max": 10, "remaining": 10 - usedTx,
-			},
-			"activeLoan": map[string]interface{}{
-				"amount": income, "info": "Total Pemasukan",
-			},
-			"monthlyFee": map[string]interface{}{
-				"amount": expense, "info": "Total Pengeluaran",
-			},
-			"history": history,
-		}
-
-		// Create bankfees stub
-		data.BankFees = map[string]interface{}{
-			"totalFeeCollected": 2060,
-			"totalTaxCollected": 2900,
-			"totalCollected":    4960,
-			"feeRate":           0.01,
-			"taxRate":           0.02,
-			"transactionsCharged": 14,
-			"entries": fees,
-		}
-
-		// Fetch News
-		var news []models.News
-		database.DB.Order("timestamp desc").Find(&news)
-		data.News = news
-
-		return c.JSON(data)
-	})
-
-	app.Post("/api/transfer", func(c *fiber.Ctx) error {
-		var req struct {
-			Amount float64 `json:"amount"`
-			ToUser string  `json:"to_user"`
-			FromUser string `json:"from_user"`
-			ToName string `json:"to_name"`
-		}
-		if err := c.BodyParser(&req); err != nil {
-			return c.Status(400).JSON(fiber.Map{"error": "Invalid request"})
-		}
-
-		// Calculate fees (3%)
-		feeBank := req.Amount * 0.03
-		totalDeduction := req.Amount + feeBank
-		fromUser := req.FromUser
-		if fromUser == "" {
-			fromUser = "USR-00142"
-		}
-
-		// Create ledger record
-		ledger := models.Ledger{
-			ID:             fmt.Sprintf("TRF-%d", time.Now().Unix()%1000000),
-			Timestamp:      time.Now(),
-			Type:           "TRANSFER_OUT",
-			Description:    "Transfer ke " + req.ToName,
-			App:            "SmartBank",
-			FromUser:       fromUser,
-			ToUser:         req.ToUser,
-			Amount:         req.Amount,
-			FeeBank:        feeBank,
-			TotalDeduction: totalDeduction,
-			Status:         "SUCCESS",
-		}
-		database.DB.Create(&ledger)
-
-		// Create bank fee record
-		fee := models.BankFee{
-			ID:                fmt.Sprintf("FEE-%d", time.Now().Unix()%1000000),
-			LedgerRef:         ledger.ID,
-			Timestamp:         time.Now(),
-			Description:       "Transfer Fee",
-			Type:              "TRANSFER_OUT",
-			TransactionAmount: req.Amount,
-			FeeAmount:         feeBank,
-			TotalCharge:       feeBank,
-			Status:            "COLLECTED",
-		}
-		database.DB.Create(&fee)
-
-		// Deduct user balance and add to recipient
-		database.DB.Exec("UPDATE users SET balance = balance - ? WHERE id = ?", totalDeduction, fromUser)
-		database.DB.Exec("UPDATE users SET balance = balance + ? WHERE id = ?", req.Amount, req.ToUser)
-
-		return c.JSON(fiber.Map{"status": "success"})
-	})
-
-	// ===== ADMIN API ENDPOINTS =====
-
-	// Get all users from DB
-	app.Get("/api/admin/users", func(c *fiber.Ctx) error {
-		var users []models.User
-		database.DB.Find(&users)
-		return c.JSON(users)
-	})
-
-	// Get all ledger entries from DB
-	app.Get("/api/admin/ledgers", func(c *fiber.Ctx) error {
-		var ledgers []models.Ledger
-		database.DB.Order("timestamp desc").Find(&ledgers)
-		return c.JSON(ledgers)
-	})
-
-	// Get all bank fees from DB
-	app.Get("/api/admin/fees", func(c *fiber.Ctx) error {
-		var fees []models.BankFee
-		database.DB.Find(&fees)
-		return c.JSON(fees)
-	})
-
-	// Get admin dashboard stats
-	app.Get("/api/admin/stats", func(c *fiber.Ctx) error {
-		var totalUsers int64
-		database.DB.Model(&models.User{}).Where("role IN ?", []string{"user", "contact"}).Count(&totalUsers)
-
-		var totalBalance float64
-		database.DB.Model(&models.User{}).Where("role IN ?", []string{"user", "contact"}).Select("COALESCE(SUM(balance),0)").Scan(&totalBalance)
-
-		var totalTransactions int64
-		database.DB.Model(&models.Ledger{}).Count(&totalTransactions)
-
-		var totalFees float64
-		database.DB.Model(&models.BankFee{}).Select("COALESCE(SUM(fee_amount),0)").Scan(&totalFees)
-
-		return c.JSON(fiber.Map{
-			"totalUsers":        totalUsers,
-			"totalBalance":      totalBalance,
-			"totalTransactions": totalTransactions,
-			"totalFeesCollected": totalFees,
-		})
-	})
-	// Get all news
-	app.Get("/api/news", func(c *fiber.Ctx) error {
-		var news []models.News
-		database.DB.Order("timestamp desc").Find(&news)
-		return c.JSON(news)
-	})
-
-	// Update user role
-	app.Put("/api/admin/users/:id/role", func(c *fiber.Ctx) error {
-		userId := c.Params("id")
-		var body struct {
-			Role string `json:"role"`
-		}
-		if err := c.BodyParser(&body); err != nil {
-			return c.Status(400).JSON(fiber.Map{"error": "Invalid request"})
-		}
-		result := database.DB.Model(&models.User{}).Where("id = ?", userId).Update("role", body.Role)
-		if result.RowsAffected == 0 {
-			return c.Status(404).JSON(fiber.Map{"error": "User not found"})
-		}
-		return c.JSON(fiber.Map{"status": "success"})
-	})
-
-	// Toggle user status (verified / suspended)
-	app.Put("/api/admin/users/:id/status", func(c *fiber.Ctx) error {
-		userId := c.Params("id")
-		var user models.User
-		if err := database.DB.First(&user, "id = ?", userId).Error; err != nil {
-			return c.Status(404).JSON(fiber.Map{"error": "User not found"})
-		}
-		newStatus := "suspended"
-		if user.Status == "suspended" {
-			newStatus = "verified"
-		}
-		database.DB.Model(&user).Update("status", newStatus)
-		return c.JSON(fiber.Map{"status": "success", "new_status": newStatus})
-	})
-
-	// Create new user (admin registration)
-	app.Post("/api/admin/users", func(c *fiber.Ctx) error {
-		var body struct {
-			Name     string `json:"name"`
-			Email    string `json:"email"`
-			Password string `json:"password"`
-			Role     string `json:"role"`
-		}
-		if err := c.BodyParser(&body); err != nil {
-			return c.Status(400).JSON(fiber.Map{"error": "Invalid request"})
-		}
-		newId := fmt.Sprintf("USR-%d", time.Now().Unix()%100000)
-		newUser := models.User{
-			ID:       newId,
-			Name:     body.Name,
-			Email:    body.Email,
-			Password: body.Password,
-			Role:     body.Role,
-			Balance:  50000,
-			Status:   "verified",
-		}
-		database.DB.Create(&newUser)
-		return c.JSON(newUser)
-	})
-
-	// Public Register
-	app.Post("/api/register", func(c *fiber.Ctx) error {
-		var body struct {
-			Name     string `json:"name"`
-			Email    string `json:"email"`
-			Password string `json:"password"`
-		}
-		if err := c.BodyParser(&body); err != nil {
-			return c.Status(400).JSON(fiber.Map{"error": "Invalid payload"})
-		}
-		
-		// Check if email exists
-		var count int64
-		database.DB.Model(&models.User{}).Where("email = ?", body.Email).Count(&count)
-		if count > 0 {
-			return c.Status(400).JSON(fiber.Map{"error": "Email already registered"})
-		}
-
-		newId := fmt.Sprintf("USR-%d", time.Now().Unix()%100000)
-		newUser := models.User{
-			ID:       newId,
-			Name:     body.Name,
-			Email:    body.Email,
-			Password: body.Password,
-			Role:     "user",
-			Balance:  50000, // Welcome bonus
-			Status:   "verified",
-		}
-		database.DB.Create(&newUser)
-		return c.JSON(newUser)
-	})
-
-	// Public Login
-	app.Post("/api/login", func(c *fiber.Ctx) error {
-		var body struct {
-			Email    string `json:"email"`
-			Password string `json:"password"`
-		}
-		if err := c.BodyParser(&body); err != nil {
-			return c.Status(400).JSON(fiber.Map{"error": "Invalid payload"})
-		}
-
-		var user models.User
-		if err := database.DB.Where("email = ? AND password = ?", body.Email, body.Password).First(&user).Error; err != nil {
-			return c.Status(401).JSON(fiber.Map{"error": "Invalid credentials"})
-		}
-
-		if user.Status == "suspended" {
-			return c.Status(403).JSON(fiber.Map{"error": "Account suspended"})
-		}
-
-		return c.JSON(user)
-	})
-
-	log.Fatal(app.Listen(":3000"))
+	log.Printf("Server starting on port %s", port)
+	log.Fatal(app.Listen(":" + port))
 }
 
 func seedNews() {
+	var count int64
+	database.DB.Model(&models.News{}).Count(&count)
+	if count > 0 {
+		return // only seed if empty
+	}
+
 	database.DB.Exec("DELETE FROM news")
 	database.DB.Create(&models.News{
 		ID:        "NEWS-01",
@@ -450,7 +143,9 @@ func seedHighAssetUsers() {
 		{ID: "NSB-020", Name: "Taufik Ismail", Email: "taufik.ismail@smartbank.id", Password: "pass020", Role: "user", Balance: 3120000, Status: "verified"},
 	}
 
-	for _, n := range nasabah {
-		database.DB.Create(&n)
+	for i, n := range nasabah {
+		hashed, _ := bcrypt.GenerateFromPassword([]byte(n.Password), bcrypt.DefaultCost)
+		nasabah[i].Password = string(hashed)
+		database.DB.Create(&nasabah[i])
 	}
 }

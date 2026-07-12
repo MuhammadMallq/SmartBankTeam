@@ -15,27 +15,29 @@ let currentPage = 'dashboard';
 
 async function bootstrap() {
   try {
-    const storedUserStr = localStorage.getItem('currentUser');
-    let fetchUrl = 'http://localhost:3000/api/dashboard/data';
-    if (storedUserStr) {
-      const storedUser = JSON.parse(storedUserStr);
-      fetchUrl += '?userId=' + storedUser.id;
+    const token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = '/login.html';
+      return;
     }
 
-    const res = await fetch(fetchUrl);
+    let fetchUrl = 'http://localhost:3000/api/dashboard/data';
+    const res = await fetch(fetchUrl, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (res.status === 401 || res.status === 403) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('currentUser');
+      window.location.href = '/login.html';
+      return;
+    }
+
     if (!res.ok) throw new Error('Data not found');
     appState = await res.json();
-    
-    // Dynamically override user state if a specific user session is active
-    if (storedUserStr) {
-      const storedUser = JSON.parse(storedUserStr);
-      appState.user.id = storedUser.id;
-      appState.user.name = storedUser.name;
-      appState.user.email = storedUser.email;
-      
-      // Filter out this user from the contacts list so they don't see themselves as a contact
-      appState.contacts = appState.contacts.filter(c => c.id !== storedUser.id);
-    }
+
     
     renderApp();
   } catch (e) {

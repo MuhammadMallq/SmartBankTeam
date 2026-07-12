@@ -28,8 +28,7 @@ export function renderTopnav(userName) {
   return `
     <nav class="topnav">
       <div class="topnav-brand">${ic.bank} SmartBank</div>
-      <div class="topnav-search">${ic.search}<input type="text" placeholder="Cari transaksi, fitur..." /></div>
-      <div class="topnav-actions">
+      <div class="topnav-actions" style="margin-left: auto;">
         <div class="topnav-icon-btn" title="Notifikasi">${ic.bell}<div class="notif-dot"></div></div>
         <div class="topnav-user">
           <div class="topnav-user-avatar">${userName.charAt(0)}</div>
@@ -160,7 +159,11 @@ function renderTransactionChart() {
             <span><span class="chart-legend-dot" style="background:var(--blue-600);"></span>Minggu Ini</span>
             <span><span class="chart-legend-dot" style="background:var(--blue-100);"></span>Minggu Lalu</span>
           </div>
-          <div class="week-selector">Minggu ▾</div>
+          <select class="week-selector" id="btn-filter-minggu" style="cursor:pointer; background:transparent; border:none; outline:none; font-family:inherit; color:var(--slate-600); font-weight:600; font-size:13px; padding-right:12px;">
+            <option value="minggu">Minggu Ini</option>
+            <option value="bulan">Bulan Ini</option>
+            <option value="tahun">Tahun Ini</option>
+          </select>
         </div>
       </div>
       <div class="bar-chart-wrap">${renderBarChart()}</div>
@@ -190,7 +193,7 @@ function renderRecentTransactions(data) {
     <div class="table-card">
       <div class="table-card-header">
         <div class="table-card-title">Transaksi Terakhir</div>
-        <span style="font-size:13px;color:var(--blue-600);cursor:pointer;font-weight:600;">Lihat Semua</span>
+        <span id="btn-lihat-semua" style="font-size:13px;color:var(--blue-600);cursor:pointer;font-weight:600;">Lihat Semua</span>
       </div>
       <div class="tx-list">
         ${(data.dashboard.history || []).map(row => {
@@ -211,10 +214,10 @@ function renderRecentTransactions(data) {
       <div class="tx-pagination">
         <div class="tx-pagination-info">Menampilkan 1–${(data.dashboard.history || []).length} data</div>
         <div class="tx-pages">
-          <button class="tx-page-btn">‹</button>
-          <button class="tx-page-btn active">1</button>
-          <button class="tx-page-btn">2</button>
-          <button class="tx-page-btn">›</button>
+          <button class="tx-page-btn btn-pager">‹</button>
+          <button class="tx-page-btn btn-pager active">1</button>
+          <button class="tx-page-btn btn-pager">2</button>
+          <button class="tx-page-btn btn-pager">›</button>
         </div>
       </div>
     </div>`;

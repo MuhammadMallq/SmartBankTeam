@@ -52,3 +52,43 @@ type News struct {
 	Url       string    `json:"url"`
 	Timestamp time.Time `json:"timestamp"`
 }
+
+type Loan struct {
+	ID             string        `gorm:"primaryKey" json:"id"`
+	UserID         string        `json:"user_id"`
+	Amount         float64       `json:"amount"`
+	Remaining      float64       `json:"remaining"`
+	Paid           float64       `json:"paid"`
+	InterestRate   float64       `json:"interestRate"`
+	Tenor          int           `json:"tenor"`
+	MonthlyPayment float64       `json:"monthlyPayment"`
+	StartDate      time.Time     `json:"startDate"`
+	DueDate        time.Time     `json:"dueDate"`
+	NextPayment    time.Time     `json:"nextPayment"`
+	Status         string        `json:"status"`
+	Installments   []Installment `gorm:"foreignKey:LoanID" json:"installments"`
+}
+
+type Installment struct {
+	ID        string    `gorm:"primaryKey" json:"id"`
+	LoanID    string    `json:"loan_id"`
+	No        int       `json:"no"`
+	Date      time.Time `json:"date"`
+	Principal float64   `json:"principal"`
+	Interest  float64   `json:"interest"`
+	Total     float64   `json:"total"`
+	Balance   float64   `json:"balance"`
+	Status    string    `json:"status"`
+}
+
+type BillPayment struct {
+	ID         string    `gorm:"primaryKey" json:"id"`
+	UserID     string    `json:"user_id"`
+	Category   string    `json:"category"`
+	Biller     string    `json:"biller"`
+	CustomerID string    `json:"customer_id"`
+	Period     string    `json:"period"`
+	Amount     float64   `json:"amount"`
+	Status     string    `json:"status"`
+	Timestamp  time.Time `json:"timestamp"`
+}

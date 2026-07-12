@@ -22,20 +22,7 @@ function getPaymentData(appState) {
   if (appState.payments) return appState.payments;
 
   // Generate simulation data from ledger payments
-  const payments = [
-    { id: 'PAY-001', category: 'listrik', biller: 'PLN Prepaid', customer_id: '5482 7193 0012', amount: 150000, status: 'SUCCESS', timestamp: '2026-05-08T09:00:00+07:00', period: 'Mei 2026' },
-    { id: 'PAY-002', category: 'air', biller: 'PDAM Kota Bandung', customer_id: '0012-3847-291', amount: 85000, status: 'SUCCESS', timestamp: '2026-05-07T14:30:00+07:00', period: 'Mei 2026' },
-    { id: 'PAY-003', category: 'internet', biller: 'IndiHome Fiber', customer_id: '1221-0088-4455', amount: 350000, status: 'SUCCESS', timestamp: '2026-05-05T10:15:00+07:00', period: 'Mei 2026' },
-    { id: 'PAY-004', category: 'telepon', biller: 'Telkomsel Pascabayar', customer_id: '0812-9876-5432', amount: 120000, status: 'SUCCESS', timestamp: '2026-05-04T16:45:00+07:00', period: 'Mei 2026' },
-    { id: 'PAY-005', category: 'bpjs', biller: 'BPJS Kesehatan', customer_id: '0001-2345-6789', amount: 150000, status: 'SUCCESS', timestamp: '2026-05-03T08:20:00+07:00', period: 'Mei 2026' },
-    { id: 'PAY-006', category: 'pajak', biller: 'PBB Kota Bandung', customer_id: 'NOP-321654987', amount: 500000, status: 'PENDING', timestamp: '2026-05-02T11:00:00+07:00', period: '2026' },
-    { id: 'PAY-007', category: 'tv', biller: 'Transvision', customer_id: 'TV-00998877', amount: 175000, status: 'SUCCESS', timestamp: '2026-04-28T09:10:00+07:00', period: 'Apr 2026' },
-    { id: 'PAY-008', category: 'asuransi', biller: 'Prudential Life', customer_id: 'POL-2026-0011', amount: 500000, status: 'SUCCESS', timestamp: '2026-04-25T13:40:00+07:00', period: 'Apr 2026' },
-    { id: 'PAY-009', category: 'listrik', biller: 'PLN Prepaid', customer_id: '5482 7193 0012', amount: 175000, status: 'SUCCESS', timestamp: '2026-04-10T09:00:00+07:00', period: 'Apr 2026' },
-    { id: 'PAY-010', category: 'internet', biller: 'IndiHome Fiber', customer_id: '1221-0088-4455', amount: 350000, status: 'FAILED', timestamp: '2026-04-05T10:15:00+07:00', period: 'Apr 2026' },
-    { id: 'PAY-011', category: 'bpjs', biller: 'BPJS Kesehatan', customer_id: '0001-2345-6789', amount: 150000, status: 'SUCCESS', timestamp: '2026-04-03T08:20:00+07:00', period: 'Apr 2026' },
-    { id: 'PAY-012', category: 'air', biller: 'PDAM Kota Bandung', customer_id: '0012-3847-291', amount: 78000, status: 'SUCCESS', timestamp: '2026-04-02T14:30:00+07:00', period: 'Apr 2026' },
-  ];
+  const payments = [];
   appState.payments = payments;
   return payments;
 }
@@ -134,6 +121,31 @@ export function renderPembayaranPage(appState) {
         `).join('')}
       </div>
     </div>
+
+    <!-- New Payment Form -->
+    ${payCategory !== 'ALL' ? `
+    <div class="pay-form-card" style="background:#fff;border-radius:12px;padding:20px;border:1px solid #e2e8f0;margin-bottom:24px;">
+      <div class="chart-card-title">Bayar Tagihan ${catLabelMap[payCategory]?.label || ''}</div>
+      <p style="font-size:13px;color:var(--slate-500);margin-bottom:16px;">Biaya admin sebesar Rp 2.500 akan dikenakan per transaksi.</p>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:200px;">
+          <label style="font-size:13px;font-weight:600;color:var(--slate-700);margin-bottom:8px;display:block;">Penyedia Layanan</label>
+          <input type="text" id="pay-input-biller" placeholder="Contoh: PLN / PDAM / Telkom" style="width:100%;padding:10px 12px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:14px;outline:none;"/>
+        </div>
+        <div style="flex:1;min-width:200px;">
+          <label style="font-size:13px;font-weight:600;color:var(--slate-700);margin-bottom:8px;display:block;">No. Pelanggan</label>
+          <input type="text" id="pay-input-cust" placeholder="Nomor Meter / ID Pelanggan" style="width:100%;padding:10px 12px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:14px;outline:none;"/>
+        </div>
+        <div style="flex:1;min-width:200px;">
+          <label style="font-size:13px;font-weight:600;color:var(--slate-700);margin-bottom:8px;display:block;">Nominal Tagihan (Rp)</label>
+          <input type="number" id="pay-input-amount" placeholder="0" style="width:100%;padding:10px 12px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:14px;outline:none;"/>
+        </div>
+        <div style="display:flex;align-items:flex-end;width:100%;">
+          <button class="btn-primary" id="btn-submit-pay" style="height:41px;padding:0 24px;width:100%;justify-content:center;margin-top:16px;">Bayar Tagihan Sekarang</button>
+        </div>
+      </div>
+    </div>
+    ` : ''}
 
     <!-- Payment History Table -->
     <div class="ldg-table-card">
@@ -244,5 +256,41 @@ export function bindPembayaranEvents(appState, rerenderPage) {
       else payPage = parseInt(page);
       rerenderPage();
     });
+  });
+
+  // Pay form submission
+  document.getElementById('btn-submit-pay')?.addEventListener('click', async () => {
+    const biller = document.getElementById('pay-input-biller').value.trim();
+    const cust = document.getElementById('pay-input-cust').value.trim();
+    const amount = parseFloat(document.getElementById('pay-input-amount').value) || 0;
+
+    if (!biller || !cust || amount <= 0) {
+      alert('Mohon lengkapi form pembayaran dengan benar.');
+      return;
+    }
+
+    if (!confirm(`Konfirmasi pembayaran tagihan ${biller} sebesar ${formatRp(amount)}? (Biaya admin Rp 2.500 akan ditambahkan)`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('http://localhost:3000/api/payments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ category: payCategory, biller: biller, customer_id: cust, amount: amount })
+      });
+      
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Gagal melakukan pembayaran');
+      
+      alert('Pembayaran berhasil!');
+      window.location.reload();
+    } catch (e) {
+      alert(e.message);
+    }
   });
 }

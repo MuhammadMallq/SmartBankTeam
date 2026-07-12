@@ -6,43 +6,52 @@ let settingsTab = 'profile'; // 'profile' | 'security' | 'notifications' | 'disp
 function getUserSettings(appState) {
   if (appState.settings) return appState.settings;
 
-  const settings = {
-    profile: {
-      name: appState.user.name,
-      email: appState.user.email,
-      phone: '0812-3456-7890',
-      address: 'Jl. Sariasih No. 54, Sarijadi, Bandung',
-      birthdate: '1995-08-15',
-      gender: 'Laki-laki',
-      occupation: 'Wiraswasta',
-    },
-    security: {
-      twoFactor: true,
-      biometric: false,
-      loginAlerts: true,
-      lastPasswordChange: '2026-03-10',
-      trustedDevices: [
-        { name: 'Chrome — Windows 11', lastUsed: '2026-05-10T19:00:00+07:00', current: true },
-        { name: 'SmartBank Mobile — Android 15', lastUsed: '2026-05-09T14:20:00+07:00', current: false },
-      ]
-    },
-    notifications: {
-      emailNotif: true,
-      pushNotif: true,
-      smsNotif: false,
-      transactionAlert: true,
-      promoAlert: false,
-      securityAlert: true,
-      monthlyReport: true,
-    },
-    display: {
-      language: 'id',
-      theme: 'light',
-      compactMode: false,
-      currency: 'IDR',
-    }
-  };
+  let settings;
+  const stored = localStorage.getItem(`settings_${appState.user.id}`);
+  if (stored) {
+    settings = JSON.parse(stored);
+  } else {
+    settings = {
+      profile: {
+        name: appState.user.name,
+        email: appState.user.email,
+        phone: '0812-3456-7890',
+        address: 'Jl. Sariasih No. 54, Sarijadi, Bandung',
+        birthdate: '1995-08-15',
+        gender: 'Laki-laki',
+        occupation: 'Wiraswasta',
+      },
+      security: {
+        twoFactor: true,
+        biometric: false,
+        loginAlerts: true,
+        lastPasswordChange: '2026-03-10',
+        trustedDevices: [
+          { name: 'Chrome — Windows 11', lastUsed: '2026-05-10T19:00:00+07:00', current: true },
+          { name: 'SmartBank Mobile — Android 15', lastUsed: '2026-05-09T14:20:00+07:00', current: false },
+        ]
+      },
+      notifications: {
+        emailNotif: true,
+        pushNotif: true,
+        smsNotif: false,
+        transactionAlert: true,
+        promoAlert: false,
+        securityAlert: true,
+        monthlyReport: true,
+      },
+      display: {
+        language: 'id',
+        theme: 'light',
+        compactMode: false,
+        currency: 'IDR',
+      }
+    };
+  }
+  
   appState.settings = settings;
+  appState.user.name = settings.profile.name;
+  appState.user.email = settings.profile.email;
   return settings;
 }
 
@@ -347,7 +356,23 @@ export function bindPengaturanEvents(appState, rerenderPage) {
 
   // Save profile toast
   document.getElementById('set-save-profile')?.addEventListener('click', () => {
+    if (appState.settings) {
+      appState.settings.profile.name = document.getElementById('set-name')?.value || '';
+      appState.settings.profile.email = document.getElementById('set-email')?.value || '';
+      appState.settings.profile.phone = document.getElementById('set-phone')?.value || '';
+      appState.settings.profile.birthdate = document.getElementById('set-dob')?.value || '';
+      appState.settings.profile.gender = document.getElementById('set-gender')?.value || '';
+      appState.settings.profile.occupation = document.getElementById('set-occupation')?.value || '';
+      appState.settings.profile.address = document.getElementById('set-address')?.value || '';
+      
+      // Also update top-level user so the header/sidebar updates
+      appState.user.name = appState.settings.profile.name;
+      appState.user.email = appState.settings.profile.email;
+      
+      localStorage.setItem(`settings_${appState.user.id}`, JSON.stringify(appState.settings));
+    }
     showSettingsToast('Profil berhasil diperbarui!');
+    rerenderPage();
   });
 
   document.getElementById('set-save-notif')?.addEventListener('click', () => {

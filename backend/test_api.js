@@ -1,15 +1,19 @@
 const http = require('http');
 
-async function request(path, method = 'GET', data = null) {
+async function request(path, method = 'GET', data = null, token = null) {
     return new Promise((resolve, reject) => {
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
         const options = {
             hostname: 'localhost',
             port: 3000,
             path: path,
             method: method,
-            headers: {
-                'Content-Type': 'application/json'
-            }
+            headers: headers
         };
 
         const req = http.request(options, (res) => {
@@ -65,22 +69,26 @@ async function runTests() {
             password: "password123"
         });
         results.push({ endpoint: 'POST /api/login', status: res.status, ok: res.status === 200 });
+        let token;
+        if (res.status === 200) {
+            const data = JSON.parse(res.body);
+            token = data.token;
+        }
 
         // 4. GET /api/dashboard/data
-        res = await request(`/api/dashboard/data?userId=${userId || 'USR-00142'}`);
+        res = await request(`/api/dashboard/data`, 'GET', null, token);
         results.push({ endpoint: 'GET /api/dashboard/data', status: res.status, ok: res.status === 200 });
 
         // 5. POST /api/transfer
         res = await request('/api/transfer', 'POST', {
             amount: 100,
             to_user: "NSB-001",
-            from_user: userId || 'USR-00142',
             to_name: "Hendra Wijaya"
-        });
+        }, token);
         results.push({ endpoint: 'POST /api/transfer', status: res.status, ok: res.status === 200 });
 
         // 6. GET /api/admin/users
-        res = await request('/api/admin/users');
+        res = await request('/api/admin/users', 'GET', null, token);
         results.push({ endpoint: 'GET /api/admin/users', status: res.status, ok: res.status === 200 });
         
         let targetUserId = userId;
@@ -90,24 +98,24 @@ async function runTests() {
         }
 
         // 7. GET /api/admin/ledgers
-        res = await request('/api/admin/ledgers');
+        res = await request('/api/admin/ledgers', 'GET', null, token);
         results.push({ endpoint: 'GET /api/admin/ledgers', status: res.status, ok: res.status === 200 });
 
         // 8. GET /api/admin/fees
-        res = await request('/api/admin/fees');
+        res = await request('/api/admin/fees', 'GET', null, token);
         results.push({ endpoint: 'GET /api/admin/fees', status: res.status, ok: res.status === 200 });
 
         // 9. GET /api/admin/stats
-        res = await request('/api/admin/stats');
+        res = await request('/api/admin/stats', 'GET', null, token);
         results.push({ endpoint: 'GET /api/admin/stats', status: res.status, ok: res.status === 200 });
 
         // 10. PUT /api/admin/users/:id/role
         if (targetUserId) {
-            res = await request(`/api/admin/users/${targetUserId}/role`, 'PUT', { role: "admin" });
+            res = await request(`/api/admin/users/${targetUserId}/role`, 'PUT', { role: "admin" }, token);
             results.push({ endpoint: 'PUT /api/admin/users/:id/role', status: res.status, ok: res.status === 200 });
 
             // 11. PUT /api/admin/users/:id/status
-            res = await request(`/api/admin/users/${targetUserId}/status`, 'PUT');
+            res = await request(`/api/admin/users/${targetUserId}/status`, 'PUT', null, token);
             results.push({ endpoint: 'PUT /api/admin/users/:id/status', status: res.status, ok: res.status === 200 });
         } else {
             results.push({ endpoint: 'PUT /api/admin/users/:id/role', status: 'skipped', ok: false });
@@ -120,7 +128,7 @@ async function runTests() {
             email: `admin${Date.now()}@test.com`,
             password: "adminpass",
             role: "admin"
-        });
+        }, token);
         results.push({ endpoint: 'POST /api/admin/users', status: res.status, ok: res.status === 200 });
 
     } catch (e) {

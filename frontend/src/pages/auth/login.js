@@ -76,7 +76,9 @@ async function handleLogin(e) {
       return;
     }
 
-    const user = await res.json();
+    const data = await res.json();
+    const user = data.user;
+    const token = data.token;
     
     // Check if user is trying to access correct portal
     if (user.role !== 'user' && user.role !== 'contact') {
@@ -84,6 +86,7 @@ async function handleLogin(e) {
       return;
     }
 
+    localStorage.setItem('token', token);
     localStorage.setItem('currentUser', JSON.stringify({
       id: user.id,
       name: user.name,

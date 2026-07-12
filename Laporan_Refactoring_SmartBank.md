@@ -429,32 +429,8 @@ Evaluasi keterikatan antarmodul:
 ---
 
 ## 14. Bukti Aplikasi Tetap Berjalan
-Verifikasi fungsionalitas backend dilakukan menggunakan skrip uji terotomatisasi `backend/test_api.js` untuk memverifikasi bahwa perubahan struktur folder dan pemisahan file tidak merusak kontrak API yang ada.
 
-### Hasil Eksekusi Uji API:
-```bash
-$ node test_api.js
-Starting API Tests...
-
-┌─────────┬───────────────────────────────┬─────────┬───────┐
-│ (index) │           endpoint            │ status  │  ok   │
-├─────────┼───────────────────────────────┼─────────┼───────┤
-│    0    │ 'GET /api/news'               │   200   │ true  │
-│    1    │ 'POST /api/register'          │   200   │ true  │
-│    2    │ 'POST /api/login'             │   200   │ true  │
-│    3    │ 'GET /api/dashboard/data'     │   200   │ true  │
-│    4    │ 'POST /api/transfer'          │   200   │ true  │
-│    5    │ 'GET /api/admin/users'        │   200   │ true  │
-│    6    │ 'GET /api/admin/ledgers'      │   200   │ true  │
-│    7    │ 'GET /api/admin/fees'         │   200   │ true  │
-│    8    │ 'GET /api/admin/stats'        │   200   │ true  │
-│    9    │ 'PUT /api/admin/users/:id/role'│  200   │ true  │
-│   10    │ 'PUT /api/admin/users/:id/status'│200   │ true  │
-│   11    │ 'POST /api/admin/users'       │   200   │ true  │
-└─────────┴───────────────────────────────┴─────────┴───────┘
-```
-
-Seluruh 12 endpoint berhasil diuji dan mengembalikan kode status **200 OK**, menunjukkan bahwa API berjalan normal secara fungsional tanpa mengalami *regression bug*.
+Karena dokumen ini dibuat sebagai contoh laporan tanpa mengubah kode aplikasi riset, pengujian "sesudah refactoring" harus dilakukan pada branch latihan terpisah. Bagian ini menunjukkan format bukti yang perlu diisi mahasiswa setelah menerapkan refactoring pada salinan/branch non-produksi.
 
 ---
 

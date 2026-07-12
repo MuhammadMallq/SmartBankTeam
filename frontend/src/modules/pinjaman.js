@@ -8,31 +8,20 @@ function getLoanData(appState) {
 
   const loans = {
     activeLoan: {
-      id: 'LN-2026-001',
-      amount: 50000000,
-      remaining: 38750000,
-      paid: 11250000,
-      interestRate: 10,
-      tenor: 12,
-      monthlyPayment: 4583333,
-      startDate: '2026-01-15',
-      dueDate: '2027-01-15',
-      nextPayment: '2026-06-15',
-      status: 'ACTIVE',
-      installments: [
-        { no: 1, date: '2026-02-15', principal: 3333333, interest: 416667, total: 3750000, balance: 46666667, status: 'PAID' },
-        { no: 2, date: '2026-03-15', principal: 3333333, interest: 388889, total: 3722222, balance: 43333334, status: 'PAID' },
-        { no: 3, date: '2026-04-15', principal: 3333333, interest: 361111, total: 3694444, balance: 40000001, status: 'PAID' },
-        { no: 4, date: '2026-05-15', principal: 3333333, interest: 333333, total: 3666666, balance: 36666668, status: 'UPCOMING' },
-        { no: 5, date: '2026-06-15', principal: 3333333, interest: 305556, total: 3638889, balance: 33333335, status: 'UPCOMING' },
-        { no: 6, date: '2026-07-15', principal: 3333333, interest: 277778, total: 3611111, balance: 30000002, status: 'UPCOMING' },
-      ]
+      id: '-',
+      amount: 0,
+      remaining: 0,
+      paid: 0,
+      interestRate: 0,
+      tenor: 0,
+      monthlyPayment: 0,
+      startDate: '-',
+      dueDate: '-',
+      nextPayment: '-',
+      status: 'NONE',
+      installments: []
     },
-    history: [
-      { id: 'LN-2025-003', amount: 20000000, tenor: 6, interestRate: 8, startDate: '2025-06-01', endDate: '2025-12-01', status: 'COMPLETED', totalPaid: 20800000 },
-      { id: 'LN-2025-001', amount: 10000000, tenor: 3, interestRate: 12, startDate: '2025-01-15', endDate: '2025-04-15', status: 'COMPLETED', totalPaid: 10300000 },
-      { id: 'LN-2024-005', amount: 30000000, tenor: 12, interestRate: 9, startDate: '2024-03-01', endDate: '2025-03-01', status: 'COMPLETED', totalPaid: 32700000 },
-    ]
+    history: []
   };
   appState.loans = loans;
   return loans;
@@ -177,7 +166,10 @@ function renderActiveLoan(active, progressPct) {
               <div class="loan-inst-info">
                 <div class="loan-inst-top">
                   <span class="loan-inst-label">Cicilan ke-${inst.no}</span>
-                  <span class="ldg-badge ${isPaid ? 'success' : 'pending'}">${isPaid ? 'Lunas' : 'Belum'}</span>
+                  <div style="display:flex;gap:8px;align-items:center;">
+                    <span class="ldg-badge ${isPaid ? 'success' : 'pending'}">${isPaid ? 'Lunas' : 'Belum'}</span>
+                    ${isUpcoming ? `<button class="btn-primary btn-pay-inst" data-instid="${inst.id}" style="padding:4px 8px;font-size:11px;min-height:unset;">Bayar</button>` : ''}
+                  </div>
                 </div>
                 <div class="loan-inst-details">
                   <span>${formatDate(inst.date)}</span>
@@ -287,6 +279,10 @@ function renderLoanSimulator() {
             <span>Fee Admin (1%)</span>
             <span id="loan-sim-admin" class="fee-sim-val" style="color:var(--red-600);">Rp 0</span>
           </div>
+          
+          <div style="margin-top:20px;">
+            <button class="btn-primary" id="btn-apply-loan" style="width:100%;justify-content:center;">Ajukan Pinjaman Ini</button>
+          </div>
         </div>
       </div>
     </div>
@@ -347,6 +343,67 @@ export function bindPinjamanEvents(appState, rerenderPage) {
       if (tenorEl) tenorEl.value = preset.tenor;
       if (rateEl) rateEl.value = preset.rate;
       updateSim();
+    });
+  });
+
+  // Apply loan action
+  document.getElementById('btn-apply-loan')?.addEventListener('click', async () => {
+    const amount = parseFloat(amountEl?.value) || 0;
+    const tenor = parseInt(tenorEl?.value) || 0;
+    const rate = parseFloat(rateEl?.value) || 0;
+
+    if (amount <= 0 || tenor <= 0 || rate <= 0) {
+      alert('Mohon isi simulasi pinjaman dengan benar.');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('http://localhost:3000/api/loans', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ amount, tenor, interestRate: rate })
+      });
+      
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Gagal mengajukan pinjaman');
+      
+      alert('Pinjaman berhasil diajukan!');
+      // Force reload to get updated dashboard/loans data
+      window.location.reload();
+    } catch (e) {
+      alert(e.message);
+    }
+  });
+
+  // Pay installment action
+  document.querySelectorAll('.btn-pay-inst').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const instId = btn.getAttribute('data-instid');
+      if (!confirm('Bayar cicilan ini?')) return;
+      
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch('http://localhost:3000/api/loans/pay', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ installmentId: instId })
+        });
+        
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Gagal membayar cicilan');
+        
+        alert('Cicilan berhasil dibayar!');
+        window.location.reload();
+      } catch (e) {
+        alert(e.message);
+      }
     });
   });
 }
