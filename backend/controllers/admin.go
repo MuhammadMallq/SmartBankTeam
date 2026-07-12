@@ -87,3 +87,55 @@ func GetAllNews(c *fiber.Ctx) error {
 	database.DB.Order("timestamp desc").Find(&news)
 	return c.JSON(news)
 }
+
+// @Summary Update User Role
+// @Description Admin update user role
+// @Tags Admin
+// @Accept json
+// @Produce json
+// @Router /api/admin/users/{id}/role [put]
+func UpdateUserRole(c *fiber.Ctx) error {
+	id := c.Params("id")
+	var req struct {
+		Role string `json:"role"`
+	}
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": err.Error()})
+	}
+	if err := database.DB.Model(&models.User{}).Where("id = ?", id).Update("role", req.Role).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(fiber.Map{"message": "Role updated"})
+}
+
+// @Summary Update User Status
+// @Description Admin update user status
+// @Tags Admin
+// @Accept json
+// @Produce json
+// @Router /api/admin/users/{id}/status [put]
+func UpdateUserStatus(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if err := database.DB.Model(&models.User{}).Where("id = ?", id).Update("status", "verified").Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(fiber.Map{"message": "Status updated"})
+}
+
+// @Summary Create Admin User
+// @Description Create a user from admin panel
+// @Tags Admin
+// @Accept json
+// @Produce json
+// @Router /api/admin/users [post]
+func CreateAdminUser(c *fiber.Ctx) error {
+	var req models.User
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": err.Error()})
+	}
+	req.ID = "ADM-" + req.Name
+	if err := database.DB.Create(&req).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(req)
+}

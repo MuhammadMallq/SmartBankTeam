@@ -27,4 +27,7 @@ func SetupRoutes(app *fiber.App) {
 	admin.Get("/ledgers", controllers.GetAllLedgers)
 	admin.Get("/fees", controllers.GetAllFees)
 	admin.Get("/stats", controllers.GetAdminStats)
+	admin.Put("/users/:id/role", controllers.UpdateUserRole)
+	admin.Put("/users/:id/status", controllers.UpdateUserStatus)
+	admin.Post("/users", controllers.CreateAdminUser)
 }
