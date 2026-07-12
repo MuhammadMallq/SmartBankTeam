@@ -1,6 +1,9 @@
 package controllers
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"smartbank-backend/database"
 	"smartbank-backend/models"
@@ -133,7 +136,7 @@ func CreateAdminUser(c *fiber.Ctx) error {
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": err.Error()})
 	}
-	req.ID = "ADM-" + req.Name
+	req.ID = fmt.Sprintf("ADM-%d", time.Now().UnixNano())
 	if err := database.DB.Create(&req).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 	}
