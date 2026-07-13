@@ -153,3 +153,16 @@ func CreateAdminUser(c *fiber.Ctx) error {
 	}
 	return c.JSON(req)
 }
+
+// @Summary Get All Accounts
+// @Description Fetch all customer accounts (Admin only)
+// @Tags Admin
+// @Accept json
+// @Produce json
+// @Success 200 {array} models.CustomerAccount
+// @Router /api/admin/accounts [get]
+func GetAllAccounts(c *fiber.Ctx) error {
+	var accounts []models.CustomerAccount
+	database.DB.Find(&accounts)
+	return c.JSON(accounts)
+}
