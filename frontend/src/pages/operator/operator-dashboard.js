@@ -21,79 +21,7 @@ let ticketData = [];
 let activityLog = [];
 let ticketFilter = 'all';
 
-// ─── Dummy Data Generation ───────────────────────────────────────────────────
-function generateQueueData() {
-  const services = [
-    { type: 'Pembukaan Rekening', category: 'Rekening' },
-    { type: 'Pengajuan KPR', category: 'Kredit' },
-    { type: 'Blokir Kartu ATM', category: 'Kartu' },
-    { type: 'Reset Password e-Banking', category: 'Digital' },
-    { type: 'Perubahan Data Nasabah', category: 'Administrasi' },
-    { type: 'Aktivasi Mobile Banking', category: 'Digital' },
-    { type: 'Klaim Asuransi', category: 'Asuransi' },
-    { type: 'Pengajuan Kartu Kredit', category: 'Kartu' },
-    { type: 'Komplain Transaksi', category: 'Komplain' },
-    { type: 'Informasi Produk', category: 'Informasi' },
-  ];
-
-  const names = [
-    { name: 'Budi Santoso', initial: 'B', color: '#0d9488' },
-    { name: 'Siti Aminah', initial: 'S', color: '#8b5cf6' },
-    { name: 'Ahmad Fauzi', initial: 'A', color: '#0891b2' },
-    { name: 'Rina Wijaya', initial: 'R', color: '#d946ef' },
-    { name: 'Dedi Kurniawan', initial: 'D', color: '#ea580c' },
-    { name: 'Maya Putri', initial: 'M', color: '#059669' },
-    { name: 'Rizky Pratama', initial: 'R', color: '#2563eb' },
-    { name: 'Sari Indah', initial: 'S', color: '#e11d48' },
-    { name: 'Hendra Gunawan', initial: 'H', color: '#7c3aed' },
-    { name: 'Lina Marlina', initial: 'L', color: '#0284c7' },
-  ];
-
-  const priorities = ['high', 'medium', 'low'];
-  const statuses = ['waiting', 'waiting', 'waiting', 'serving'];
-
-  return names.map((n, i) => ({
-    queueNo: `A${String(i + 1).padStart(3, '0')}`,
-    ...n,
-    id: `USR-${String(Math.floor(Math.random() * 999) + 1).padStart(5, '0')}`,
-    service: services[i],
-    priority: priorities[Math.floor(Math.random() * 3)],
-    status: i === 0 ? 'serving' : statuses[Math.floor(Math.random() * 4)],
-    waitTime: i === 0 ? 0 : Math.floor(Math.random() * 20) + 1,
-    arrivedAt: new Date(Date.now() - (Math.floor(Math.random() * 60) + 5) * 60000),
-  }));
-}
-
-function generateTicketData() {
-  const tickets = [
-    { id: 'TKT-2601', customer: 'Budi Santoso', customerId: 'USR-00142', category: 'Komplain', subject: 'Transfer gagal ke rekening BCA', status: 'open', priority: 'high', created: '2026-06-07T08:15:00', notes: 'Nasabah sudah melaporkan 2x via call center.' },
-    { id: 'TKT-2602', customer: 'Siti Aminah', customerId: 'USR-00089', category: 'Informasi', subject: 'Pertanyaan produk deposito berjangka', status: 'progress', priority: 'low', created: '2026-06-07T09:30:00', notes: 'Nasabah tertarik deposito 12 bulan.' },
-    { id: 'TKT-2603', customer: 'Ahmad Fauzi', customerId: 'USR-00023', category: 'Administrasi', subject: 'Perubahan nomor telepon rekening', status: 'open', priority: 'medium', created: '2026-06-07T10:05:00', notes: 'Perlu verifikasi KTP dan KK.' },
-    { id: 'TKT-2604', customer: 'Rina Wijaya', customerId: 'USR-00089', category: 'Kartu', subject: 'Kartu ATM tertelan di mesin', status: 'resolved', priority: 'high', created: '2026-06-06T14:20:00', notes: 'Kartu sudah diambil dari mesin ATM cabang Dago.' },
-    { id: 'TKT-2605', customer: 'Dedi Kurniawan', customerId: 'USR-00071', category: 'Digital', subject: 'Tidak bisa login mobile banking', status: 'progress', priority: 'medium', created: '2026-06-07T07:45:00', notes: 'Reset password sudah dilakukan, menunggu aktivasi.' },
-    { id: 'TKT-2606', customer: 'Maya Putri', customerId: 'USR-00034', category: 'Komplain', subject: 'Potongan biaya admin tidak sesuai', status: 'open', priority: 'high', created: '2026-06-07T11:00:00', notes: 'Biaya admin Rp 25.000 bulan ini, seharusnya Rp 15.000.' },
-    { id: 'TKT-2607', customer: 'Rizky Pratama', customerId: 'USR-00112', category: 'Rekening', subject: 'Pembukaan rekening tabungan bisnis', status: 'closed', priority: 'low', created: '2026-06-05T16:30:00', notes: 'Rekening sudah aktif, kartu ATM akan dikirim H+3.' },
-    { id: 'TKT-2608', customer: 'Sari Indah', customerId: 'USR-00200', category: 'Kredit', subject: 'Status pengajuan KPR', status: 'progress', priority: 'medium', created: '2026-06-06T10:00:00', notes: 'Dokumen sudah lengkap, menunggu approval dari pusat.' },
-  ];
-  return tickets;
-}
-
-function generateActivityLog() {
-  return [
-    { type: 'login', title: 'Login ke Sistem', desc: 'Operator Support masuk ke portal', time: '07:30' },
-    { type: 'serve', title: 'Melayani Budi Santoso', desc: 'Antrian A001 — Komplain Transaksi', time: '07:45' },
-    { type: 'ticket', title: 'Buat Tiket TKT-2601', desc: 'Transfer gagal ke rekening BCA', time: '08:15' },
-    { type: 'close', title: 'Selesai — Budi Santoso', desc: 'Masalah transfer berhasil dipandu', time: '08:35' },
-    { type: 'serve', title: 'Melayani Siti Aminah', desc: 'Antrian A002 — Informasi Produk', time: '08:40' },
-    { type: 'ticket', title: 'Buat Tiket TKT-2602', desc: 'Informasi deposito berjangka', time: '09:30' },
-    { type: 'close', title: 'Selesai — Siti Aminah', desc: 'Nasabah akan konfirmasi via email', time: '09:50' },
-    { type: 'serve', title: 'Melayani Ahmad Fauzi', desc: 'Antrian A003 — Perubahan Data', time: '10:00' },
-    { type: 'ticket', title: 'Buat Tiket TKT-2603', desc: 'Perubahan nomor telepon', time: '10:05' },
-    { type: 'escalate', title: 'Eskalasi TKT-2606', desc: 'Potongan biaya admin — diteruskan ke Manager', time: '11:15' },
-    { type: 'serve', title: 'Melayani Dedi Kurniawan', desc: 'Antrian A005 — Reset Mobile Banking', time: '11:30' },
-    { type: 'close', title: 'Tutup Tiket TKT-2604', desc: 'Kartu ATM Rina — sudah diterima', time: '12:00' },
-  ];
-}
+// Data is now fetched from the backend API in bootstrap()
 
 // ─── SVG Icons (Extended) ────────────────────────────────────────────────────
 const OP_ICONS = {
@@ -116,7 +44,8 @@ const OP_ICONS = {
 // ─── Bootstrap ───────────────────────────────────────────────────────────────
 async function bootstrap() {
   const loggedInStr = localStorage.getItem('operatorUser');
-  if (!loggedInStr) {
+  const token = localStorage.getItem('token');
+  if (!loggedInStr || !token) {
     window.location.href = '/operator-login.html';
     return;
   }
@@ -125,18 +54,63 @@ async function bootstrap() {
   appData = { operator: operatorUser, contacts: [], ledger: [] };
 
   try {
-    const res = await fetch('http://localhost:3000/api/admin/users');
+    const headers = { 'Authorization': `Bearer ${token}` };
+    const res = await fetch('http://localhost:3000/api/admin/users', { headers });
     if (res.ok) {
       const allUsers = await res.json();
       appData.contacts = allUsers.filter(u => u.role === 'user' || u.role === 'contact');
     }
+
+    const qRes = await fetch('http://localhost:3000/api/ops/queue', { headers });
+    if (qRes.ok) {
+       const qs = await qRes.json();
+       queueData = (qs || []).map(q => {
+         // Try to find customer name from contacts
+         const cust = appData.contacts.find(c => c.id === q.customer_id);
+         const custName = cust ? cust.name : q.customer_id;
+         return {
+           queueNo: q.number,
+           name: custName,
+           initial: custName.charAt(0).toUpperCase(),
+           color: cust?.color || '#0d9488',
+           id: q.customer_id,
+           service: { type: q.service, category: 'Layanan' },
+           priority: 'medium',
+           status: q.status.toLowerCase(),
+           waitTime: Math.max(1, Math.floor((Date.now() - new Date(q.created_at).getTime()) / 60000)),
+           arrivedAt: q.created_at
+         };
+       });
+    }
+
+    const tRes = await fetch('http://localhost:3000/api/ops/tickets', { headers });
+    if (tRes.ok) {
+       const ts = await tRes.json();
+       ticketData = (ts || []).map(t => {
+         const cust = appData.contacts.find(c => c.id === t.customer_id);
+         return {
+           id: t.id,
+           customer: cust ? cust.name : t.customer_id,
+           customerId: t.customer_id,
+           category: t.category,
+           subject: t.subject,
+           status: t.status.toLowerCase(),
+           priority: (t.priority || 'medium').toLowerCase(),
+           created: t.created_at,
+           notes: t.note
+         };
+       });
+    }
   } catch (e) {
-    console.error('Failed to load contacts', e);
+    console.error('Failed to load data', e);
   }
 
-  queueData = generateQueueData();
-  ticketData = generateTicketData();
-  activityLog = generateActivityLog();
+  activityLog = [{
+    type: 'login',
+    title: 'Login ke Sistem',
+    desc: `${appData.operator.name} masuk ke portal`,
+    time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+  }];
 
   renderApp();
 }

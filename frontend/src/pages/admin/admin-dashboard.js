@@ -31,12 +31,21 @@ let systemLogs = [
 // --- Bootstrapping System ---
 async function bootstrap() {
   try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = '/admin-login.html';
+      return;
+    }
+
+    const headers = { 'Authorization': `Bearer ${token}` };
+
     // Fetch all admin data
-    const [usersRes, ledgersRes, statsRes, feesRes] = await Promise.all([
-      fetch('http://localhost:3000/api/admin/users'),
-      fetch('http://localhost:3000/api/admin/ledgers'),
-      fetch('http://localhost:3000/api/admin/stats'),
-      fetch('http://localhost:3000/api/admin/fees')
+    const [usersRes, ledgersRes, statsRes, feesRes, policyRes] = await Promise.all([
+      fetch('http://localhost:3000/api/admin/users', { headers }),
+      fetch('http://localhost:3000/api/admin/ledgers', { headers }),
+      fetch('http://localhost:3000/api/admin/stats', { headers }),
+      fetch('http://localhost:3000/api/admin/fees', { headers }),
+      fetch('http://localhost:3000/api/admin/policy', { headers })
     ]);
 
     if (!usersRes.ok || !ledgersRes.ok || !statsRes.ok || !feesRes.ok) {
@@ -49,6 +58,15 @@ async function bootstrap() {
       stats: await statsRes.json(),
       fees: await feesRes.json()
     };
+    if (policyRes.ok) {
+      const p = await policyRes.json();
+      systemPolicies = {
+        feeRate: p.fee_rate,
+        taxRate: p.tax_rate,
+        loanInterest: p.loan_interest,
+        dailyLimit: p.daily_limit
+      };
+    }
 
     // Render Base Page
     renderBaseLayout();
@@ -555,7 +573,10 @@ function attachTableActions() {
         try {
           const res = await fetch(`http://localhost:3000/api/admin/users/${userId}/role`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
             body: JSON.stringify({ role: newRole })
           });
           
@@ -575,7 +596,9 @@ function attachTableActions() {
           showToast(`Perubahan Hak Akses Berhasil: ${user.name} diubah menjadi ${newRole.toUpperCase()}`);
 
           // Refresh data quietly
-          fetch('http://localhost:3000/api/admin/stats')
+          fetch('http://localhost:3000/api/admin/stats', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+          })
             .then(r => r.json())
             .then(data => appState.stats = data);
             
@@ -595,7 +618,8 @@ function attachTableActions() {
       if (user) {
         try {
           const res = await fetch(`http://localhost:3000/api/admin/users/${userId}/status`, {
-            method: 'PUT'
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
           });
           if (!res.ok) throw new Error('Toggle status failed');
           const data = await res.json();
@@ -658,27 +682,46 @@ function attachTableActions() {
   // 5. Policy Save Button
   const saveBtn = document.getElementById('savePoliciesBtn');
   if (saveBtn) {
-    saveBtn.addEventListener('click', () => {
+    saveBtn.addEventListener('click', async () => {
       const feeVal = parseFloat(document.getElementById('slider-fee').value);
       const taxVal = parseFloat(document.getElementById('slider-tax').value);
       const interestVal = parseInt(document.getElementById('slider-interest').value);
       const limitVal = parseInt(document.getElementById('slider-limit').value);
 
-      systemPolicies = {
-        feeRate: feeVal,
-        taxRate: taxVal,
-        loanInterest: interestVal,
-        dailyLimit: limitVal
-      };
+      try {
+        const res = await fetch('http://localhost:3000/api/admin/policy', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({
+            fee_rate: feeVal,
+            tax_rate: taxVal,
+            loan_interest: interestVal,
+            daily_limit: limitVal
+          })
+        });
+        if (!res.ok) throw new Error('Failed to update policies');
 
-      const timeNow = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-      systemLogs.unshift({
-        time: timeNow,
-        tag: 'SYS',
-        text: `Global financial parameters updated: FEE=${feeVal}%, TAX=${taxVal}%, INTEREST=${interestVal}%, DAILY_LIMIT=${limitVal}Tx.`
-      });
+        systemPolicies = {
+          feeRate: feeVal,
+          taxRate: taxVal,
+          loanInterest: interestVal,
+          dailyLimit: limitVal
+        };
 
-      showToast('Konfigurasi Kebijakan Moneter Berhasil Diperbarui!');
+        const timeNow = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        systemLogs.unshift({
+          time: timeNow,
+          tag: 'SYS',
+          text: `Global financial parameters updated: FEE=${feeVal}%, TAX=${taxVal}%, INTEREST=${interestVal}%, DAILY_LIMIT=${limitVal}Tx.`
+        });
+
+        showToast('Konfigurasi Kebijakan Moneter Berhasil Diperbarui!');
+      } catch (err) {
+        showToast(`Gagal: ${err.message}`, 'error');
+      }
     });
   }
 
@@ -702,7 +745,10 @@ function attachTableActions() {
       try {
         const res = await fetch('http://localhost:3000/api/admin/users', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
           body: JSON.stringify({
             name: name,
             email: email,

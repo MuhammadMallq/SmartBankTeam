@@ -67,13 +67,15 @@ function renderTellerLoginPage() {
         return;
       }
 
-      const user = await res.json();
+      const data = await res.json();
+      const user = data.user;
       
       if (user.role !== 'teller' && user.role !== 'admin') {
         showToast('Akses ditolak. Bukan Teller.', 'error');
         return;
       }
 
+      localStorage.setItem('token', data.token);
       localStorage.setItem('tellerUser', JSON.stringify(user));
       showToast('Login Teller Berhasil!');
       setTimeout(() => {

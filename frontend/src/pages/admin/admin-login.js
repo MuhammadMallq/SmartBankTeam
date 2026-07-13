@@ -90,13 +90,15 @@ document.getElementById('adminLoginForm').addEventListener('submit', async (e) =
       return;
     }
 
-    const user = await res.json();
+    const data = await res.json();
+    const user = data.user;
     
     if (user.role !== 'admin') {
       showToast('Auth Denied. Insufficient clearance.', 'error');
       return;
     }
 
+    localStorage.setItem('token', data.token);
     localStorage.setItem('adminUser', JSON.stringify(user));
     showToast('Auth Success. Redirecting...', 'success');
     

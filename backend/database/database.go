@@ -33,7 +33,21 @@ func ConnectDB() {
 	log.Println("connected")
 	db.Logger = db.Logger.LogMode(1) // Info level
 	log.Println("running migrations")
-	db.AutoMigrate(&models.User{}, &models.Ledger{}, &models.BankFee{}, &models.News{}, &models.Loan{}, &models.Installment{}, &models.BillPayment{})
+	db.AutoMigrate(
+		&models.User{},
+		&models.Ledger{},
+		&models.BankFee{},
+		&models.News{},
+		&models.Loan{},
+		&models.Installment{},
+		&models.BillPayment{},
+		// New operational models
+		&models.ServiceTicket{},
+		&models.QueueItem{},
+		&models.TellerSession{},
+		&models.SystemPolicy{},
+		&models.CustomerAccount{},
+	)
 
 	DB = db
 }

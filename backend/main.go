@@ -25,12 +25,14 @@ import (
 // @securityDefinitions.apikey ApiKeyAuth
 // @in header
 // @name Authorization
+
 func main() {
 	database.ConnectDB()
 
 	// Seed data
 	seedNews()
 	seedHighAssetUsers()
+	seedStaffUsers()
 
 	app := fiber.New()
 
@@ -147,5 +149,28 @@ func seedHighAssetUsers() {
 		hashed, _ := bcrypt.GenerateFromPassword([]byte(n.Password), bcrypt.DefaultCost)
 		nasabah[i].Password = string(hashed)
 		database.DB.Create(&nasabah[i])
+	}
+}
+
+func seedStaffUsers() {
+	var count int64
+	database.DB.Model(&models.User{}).Where("role != 'user'").Count(&count)
+
+	if count > 0 {
+		return // already seeded
+	}
+
+	staff := []models.User{
+		{ID: "ADM-001", Name: "System Admin", Email: "admin@smartbank.local", Password: "password123", Role: "admin", Status: "verified", Initial: "AD", Color: "#ef4444"},
+		{ID: "MGR-001", Name: "Bank Manager", Email: "manager@smartbank.local", Password: "password123", Role: "manager", Status: "verified", Initial: "M", Color: "#3b82f6"},
+		{ID: "OPR-001", Name: "Operator Support", Email: "operator@smartbank.local", Password: "password123", Role: "operator", Status: "verified", Initial: "O", Color: "#10b981"},
+		{ID: "TLR-001", Name: "Teller Staff", Email: "teller@smartbank.local", Password: "password123", Role: "teller", Status: "verified", Initial: "T", Color: "#6366f1"},
+		{ID: "CSR-001", Name: "CS Officer", Email: "cs@smartbank.local", Password: "password123", Role: "cs", Status: "verified", Initial: "CS", Color: "#8b5cf6"},
+	}
+
+	for i, s := range staff {
+		hashed, _ := bcrypt.GenerateFromPassword([]byte(s.Password), bcrypt.DefaultCost)
+		staff[i].Password = string(hashed)
+		database.DB.Create(&staff[i])
 	}
 }

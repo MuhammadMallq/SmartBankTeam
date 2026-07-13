@@ -25,6 +25,8 @@ let lastSearch = '';
 let balanceInquiryAccountNo = '1002003001';
 
 async function bootstrap() {
+  const { syncWithBackend } = await import('../../utils/smartbank-ops-store.js');
+  await syncWithBackend();
   renderCSUI();
   subscribeOperationalStore(() => renderCSUI());
 }
@@ -520,27 +522,31 @@ function attachEvents() {
     renderCSUI();
   });
 
-  document.getElementById('form-onboarding')?.addEventListener('submit', (event) => {
+  document.getElementById('form-onboarding')?.addEventListener('submit', async (event) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const action = form.get('action');
 
     try {
       if (action === 'open') {
-        const result = createCustomerWithAccount({
+        const token = localStorage.getItem('token');
+        const payload = {
           name: form.get('name'),
           email: form.get('email'),
-          phone: form.get('phone'),
-          nik: form.get('nik'),
-          address: form.get('address'),
-          product: form.get('product'),
-          initialDeposit: form.get('initialDeposit')
+          password: 'password123',
+          role: 'user'
+        };
+        const res = await fetch('http://localhost:3000/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify(payload)
         });
-
-        selectedCustomerId = result.customer.id;
-        selectedAccountNo = result.account.accountNo;
-        balanceInquiryAccountNo = result.account.accountNo;
-        showToast(`Rekening ${result.account.accountNo} berhasil dibuka.`, 'success');
+        
+        if (!res.ok) throw new Error('Gagal membuka rekening (Email mungkin sudah dipakai)');
+        
+        const { syncWithBackend } = await import('../../utils/smartbank-ops-store.js');
+        await syncWithBackend();
+        showToast(`Rekening untuk ${payload.name} berhasil dibuka.`, 'success');
       }
 
       if (action === 'update') {
@@ -554,11 +560,16 @@ function attachEvents() {
       }
 
       if (action === 'unlock') {
-        const result = unlockAccount({ accountNo: form.get('accountNo') || selectedAccountNo });
-        selectedCustomerId = result.customer.id;
-        selectedAccountNo = result.account.accountNo;
-        balanceInquiryAccountNo = result.account.accountNo;
-        showToast(`Rekening ${result.account.accountNo} sudah aktif.`, 'success');
+        const token = localStorage.getItem('token');
+        const res = await fetch(`http://localhost:3000/api/admin/users/${selectedCustomerId}/status`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error('Gagal membuka blokir');
+
+        const { syncWithBackend } = await import('../../utils/smartbank-ops-store.js');
+        await syncWithBackend();
+        showToast(`Rekening nasabah sudah aktif.`, 'success');
       }
 
       event.currentTarget.reset();
@@ -568,18 +579,28 @@ function attachEvents() {
     }
   });
 
-  document.getElementById('form-ticket')?.addEventListener('submit', (event) => {
+  document.getElementById('form-ticket')?.addEventListener('submit', async (event) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
 
     try {
-      createServiceTicket({
-        customerId: selectedCustomerId,
-        accountNo: selectedAccountNo,
-        category: form.get('category'),
-        priority: form.get('priority'),
-        note: form.get('note')
+      const token = localStorage.getItem('token');
+      const res = await fetch('http://localhost:3000/api/ops/tickets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({
+          customer_id: selectedCustomerId,
+          account_no: selectedAccountNo,
+          category: form.get('category'),
+          priority: form.get('priority'),
+          note: form.get('note')
+        })
       });
+      if (!res.ok) throw new Error('Gagal buat tiket');
+      
+      const { syncWithBackend } = await import('../../utils/smartbank-ops-store.js');
+      await syncWithBackend();
+      
       showToast('Tiket nasabah berhasil dibuat.', 'success');
       event.currentTarget.reset();
       renderCSUI();
@@ -588,17 +609,28 @@ function attachEvents() {
     }
   });
 
-  document.getElementById('form-queue')?.addEventListener('submit', (event) => {
+  document.getElementById('form-queue')?.addEventListener('submit', async (event) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
 
     try {
-      const result = addQueueItem({
-        customerId: selectedCustomerId,
-        service: form.get('service'),
-        notes: form.get('notes')
+      const token = localStorage.getItem('token');
+      const res = await fetch('http://localhost:3000/api/ops/queue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({
+          customer_id: selectedCustomerId,
+          service: form.get('service'),
+          notes: form.get('notes')
+        })
       });
-      showToast(`Nomor antrean ${result.item.number} ditambahkan.`, 'success');
+      if (!res.ok) throw new Error('Gagal buat antrean');
+      const item = await res.json();
+      
+      const { syncWithBackend } = await import('../../utils/smartbank-ops-store.js');
+      await syncWithBackend();
+      
+      showToast(`Nomor antrean ${item.number} ditambahkan.`, 'success');
       event.currentTarget.reset();
       renderCSUI();
     } catch (error) {
@@ -607,9 +639,20 @@ function attachEvents() {
   });
 
   document.querySelectorAll('[data-ticket-status]').forEach((button) => {
-    button.addEventListener('click', () => {
+    button.addEventListener('click', async () => {
       try {
-        updateServiceTicketStatus(button.getAttribute('data-ticket-id'), button.getAttribute('data-ticket-status'));
+        const ticketId = button.getAttribute('data-ticket-id');
+        const status = button.getAttribute('data-ticket-status');
+        const token = localStorage.getItem('token');
+        await fetch(`http://localhost:3000/api/ops/tickets/${ticketId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ status })
+        });
+        
+        const { syncWithBackend } = await import('../../utils/smartbank-ops-store.js');
+        await syncWithBackend();
+        
         showToast('Status tiket diperbarui.', 'success');
         renderCSUI();
       } catch (error) {
@@ -619,9 +662,20 @@ function attachEvents() {
   });
 
   document.querySelectorAll('[data-queue-status]').forEach((button) => {
-    button.addEventListener('click', () => {
+    button.addEventListener('click', async () => {
       try {
-        updateQueueStatus(button.getAttribute('data-queue-id'), button.getAttribute('data-queue-status'));
+        const queueId = button.getAttribute('data-queue-id');
+        const status = button.getAttribute('data-queue-status');
+        const token = localStorage.getItem('token');
+        await fetch(`http://localhost:3000/api/ops/queue/${queueId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ status })
+        });
+        
+        const { syncWithBackend } = await import('../../utils/smartbank-ops-store.js');
+        await syncWithBackend();
+        
         showToast('Status antrean diperbarui.', 'success');
         renderCSUI();
       } catch (error) {

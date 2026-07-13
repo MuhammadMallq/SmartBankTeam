@@ -67,13 +67,15 @@ function renderManagerLoginPage() {
         return;
       }
 
-      const user = await res.json();
+      const data = await res.json();
+      const user = data.user;
       
       if (user.role !== 'manager' && user.role !== 'admin') {
         showToast('Akses ditolak. Bukan Manajer.', 'error');
         return;
       }
 
+      localStorage.setItem('token', data.token);
       localStorage.setItem('managerUser', JSON.stringify(user));
       showToast('Login Manajer Berhasil!');
       setTimeout(() => {

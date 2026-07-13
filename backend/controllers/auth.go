@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"fmt"
+	"math/rand"
 	"os"
 	"time"
 
@@ -8,7 +10,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
-	
+
 	"smartbank-backend/database"
 	"smartbank-backend/models"
 )
@@ -24,6 +26,9 @@ type RegisterReq struct {
 	Name     string `json:"name"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
+	Phone    string `json:"phone"`
+	NIK      string `json:"nik"`
+	Tier     string `json:"tier"`
 }
 
 // @Summary Register a new user
@@ -53,21 +58,50 @@ func Register(c *fiber.Ctx) error {
 	}
 
 	newId := "USR-" + uuid.New().String()[:8]
+	tier := body.Tier
+	if tier == "" {
+		tier = "Bronze" // Default fallback
+	}
+
 	newUser := models.User{
 		ID:       newId,
 		Name:     body.Name,
 		Email:    body.Email,
 		Password: string(hashedPassword),
 		Role:     "user",
-		Balance:  50000, // Welcome bonus
-		Status:   "verified",
+		Initial:  string(body.Name[0]),
+		Color:    "#0d9488",
+		Balance:  0, // No welcome bonus, start at 0
+		Status:   "pending_deposit",
+		Tier:     tier,
+		Phone:    body.Phone,
+		NIK:      body.NIK,
 	}
 	database.DB.Create(&newUser)
+
+	// Create a Customer Account automatically so Teller can deposit into it
+	newAccountNo := fmt.Sprintf("100%d", rand.Intn(9000000)+1000000)
+	
+	newAccount := models.CustomerAccount{
+		AccountNo:  newAccountNo,
+		CustomerID: newId,
+		Product:    "Tabungan Smart " + tier,
+		Type:       "TABUNGAN",
+		Balance:    0,
+		Status:     "AKTIF",
+		OpenedAt:   time.Now(),
+		Branch:     "KCP Utama",
+	}
+	database.DB.Create(&newAccount)
 	
 	// Don't return the hashed password
 	newUser.Password = ""
 	
-	return c.JSON(newUser)
+	return c.JSON(fiber.Map{
+		"user": newUser,
+		"account": newAccount,
+		"message": "Pendaftaran berhasil. Silakan lakukan setoran awal di Teller minimal Rp 50.000 untuk mengaktifkan akun Anda.",
+	})
 }
 
 // @Summary Login user

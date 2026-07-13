@@ -67,13 +67,15 @@ function renderOperatorLoginPage() {
         return;
       }
 
-      const user = await res.json();
+      const data = await res.json();
+      const user = data.user;
       
       if (user.role !== 'operator' && user.role !== 'admin') {
         showToast('Akses ditolak. Bukan Operator.', 'error');
         return;
       }
 
+      localStorage.setItem('token', data.token);
       localStorage.setItem('operatorUser', JSON.stringify(user));
       showToast('Login Operator Berhasil!');
       setTimeout(() => {

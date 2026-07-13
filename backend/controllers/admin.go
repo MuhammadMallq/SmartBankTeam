@@ -116,13 +116,24 @@ func UpdateUserRole(c *fiber.Ctx) error {
 // @Tags Admin
 // @Accept json
 // @Produce json
-// @Router /api/admin/users/{id}/status [put]
 func UpdateUserStatus(c *fiber.Ctx) error {
 	id := c.Params("id")
-	if err := database.DB.Model(&models.User{}).Where("id = ?", id).Update("status", "verified").Error; err != nil {
+	
+	var user models.User
+	if err := database.DB.Where("id = ?", id).First(&user).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "User not found"})
+	}
+
+	newStatus := "verified"
+	if user.Status == "verified" {
+		newStatus = "suspended"
+	}
+
+	if err := database.DB.Model(&user).Update("status", newStatus).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 	}
-	return c.JSON(fiber.Map{"message": "Status updated"})
+	
+	return c.JSON(fiber.Map{"message": "Status updated", "new_status": newStatus})
 }
 
 // @Summary Create Admin User

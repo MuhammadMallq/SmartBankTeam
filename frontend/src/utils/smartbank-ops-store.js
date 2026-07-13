@@ -1030,8 +1030,81 @@ export function addQueueItem({ customerId, service, notes = '' }) {
     };
 
     state.queue.unshift(item);
-    return { item };
+    return { item, customer };
   });
+}
+
+export async function syncWithBackend() {
+  const token = localStorage.getItem('token');
+  if (!token) return;
+
+  const headers = { 'Authorization': `Bearer ${token}` };
+  
+  try {
+    const [queueRes, ticketsRes, usersRes] = await Promise.all([
+      fetch('http://localhost:3000/api/ops/queue', { headers }),
+      fetch('http://localhost:3000/api/ops/tickets', { headers }),
+      fetch('http://localhost:3000/api/admin/users', { headers })
+    ]);
+
+    const state = getOperationalState();
+    
+    if (usersRes.ok) {
+      const users = await usersRes.json();
+      state.customers = users.map(u => ({
+        id: u.id,
+        nik: u.id,
+        name: u.name,
+        email: u.email,
+        phone: '0812345678',
+        address: '-',
+        segment: u.role,
+        status: u.status === 'verified' ? 'AKTIF' : 'BLOKIR',
+        risk: 'LOW',
+        joinedAt: new Date().toISOString()
+      }));
+      // Just simulate accounts for everyone if missing, this is just a bridge
+      state.accounts = users.map((u, i) => ({
+        accountNo: `100200300${i}`,
+        customerId: u.id,
+        product: 'Tabungan Smart',
+        type: 'TABUNGAN',
+        balance: u.balance,
+        status: 'AKTIF',
+        openedAt: new Date().toISOString(),
+        branch: 'Pusat'
+      }));
+    }
+
+    if (queueRes.ok) {
+      const qs = await queueRes.json();
+      state.queue = qs.map(q => ({
+        id: q.id,
+        number: q.number,
+        customerId: q.customer_id,
+        service: q.service,
+        status: q.status,
+        notes: q.notes
+      }));
+    }
+
+    if (ticketsRes.ok) {
+      const ts = await ticketsRes.json();
+      state.tickets = ts.map(t => ({
+        id: t.id,
+        customerId: t.customer_id,
+        accountNo: 'UNKNOWN',
+        category: t.category,
+        priority: t.priority,
+        status: t.status,
+        note: t.note
+      }));
+    }
+
+    commit(state);
+  } catch(e) {
+    console.error('Failed to sync backend', e);
+  }
 }
 
 export function updateQueueStatus(queueId, status) {

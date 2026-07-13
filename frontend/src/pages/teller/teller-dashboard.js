@@ -20,6 +20,8 @@ let tellerSearch = '';
 let lastReceipt = null;
 
 async function bootstrap() {
+  const { syncWithBackend } = await import('../../utils/smartbank-ops-store.js');
+  await syncWithBackend();
   renderTellerUI();
   subscribeOperationalStore(() => renderTellerUI());
 }
@@ -485,9 +487,9 @@ function openConfirmDialog({ title, tone = 'info', rows, confirmText = 'Konfirma
     if (event.target === overlay) overlay.remove();
   });
 
-  overlay.querySelector('[data-confirm-action]').addEventListener('click', () => {
+  overlay.querySelector('[data-confirm-action]').addEventListener('click', async () => {
     try {
-      onConfirm();
+      await onConfirm();
       overlay.remove();
     } catch (error) {
       showToast(error.message, 'error');
@@ -567,12 +569,30 @@ function attachEvents() {
           { label: 'Nominal Setor', value: formatIDR(amount) },
           { label: 'Saldo Setelah', value: formatIDR(detail.account.balance + amount) }
         ],
-        onConfirm: () => {
-          const result = depositCash({ accountNo, amount, note });
-          selectedCustomerId = result.customer.id;
-          selectedAccountNo = result.account.accountNo;
-          lastReceipt = buildCashReceipt('Setor Tunai', result);
-          showToast('Setoran tunai berhasil diproses.', 'success');
+        onConfirm: async () => {
+          const token = localStorage.getItem('token');
+          const res = await fetch('http://localhost:3000/api/ops/deposit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ account_no: accountNo, amount, notes: note })
+          });
+          
+          if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.error || 'Gagal setor tunai');
+          }
+
+          const data = await res.json();
+
+          // Force sync to update the UI local state
+          const { syncWithBackend } = await import('../../utils/smartbank-ops-store.js');
+          await syncWithBackend();
+          
+          if (data.activated) {
+            showToast('Setoran berhasil. Akun nasabah kini TELAH AKTIF!', 'success');
+          } else {
+            showToast('Setoran tunai berhasil diproses.', 'success');
+          }
           renderTellerUI();
         }
       });
@@ -604,11 +624,22 @@ function attachEvents() {
           { label: 'Nominal Tarik', value: formatIDR(amount) },
           { label: 'Saldo Setelah', value: formatIDR(detail.account.balance - amount) }
         ],
-        onConfirm: () => {
-          const result = withdrawCash({ accountNo, amount, note });
-          selectedCustomerId = result.customer.id;
-          selectedAccountNo = result.account.accountNo;
-          lastReceipt = buildCashReceipt('Tarik Tunai', result);
+        onConfirm: async () => {
+          const token = localStorage.getItem('token');
+          const res = await fetch('http://localhost:3000/api/ops/withdraw', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ account_no: accountNo, amount, notes: note })
+          });
+          
+          if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.error || 'Gagal tarik tunai');
+          }
+
+          const { syncWithBackend } = await import('../../utils/smartbank-ops-store.js');
+          await syncWithBackend();
+          
           showToast('Penarikan tunai berhasil diproses.', 'success');
           renderTellerUI();
         }
@@ -649,11 +680,22 @@ function attachEvents() {
           { label: 'Total Debit', value: formatIDR(totalDebit) },
           { label: 'Saldo Setelah', value: formatIDR(source.account.balance - totalDebit) }
         ],
-        onConfirm: () => {
-          const result = transferFunds({ sourceAccountNo, targetAccountNo, amount, note });
-          selectedCustomerId = result.sourceCustomer.id;
-          selectedAccountNo = result.sourceAccount.accountNo;
-          lastReceipt = buildTransferReceipt(result);
+        onConfirm: async () => {
+          const token = localStorage.getItem('token');
+          const res = await fetch('http://localhost:3000/api/transfer', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ to_user_id: target.customer.id, amount, notes: note })
+          });
+
+          if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.error || 'Gagal transfer dana');
+          }
+
+          const { syncWithBackend } = await import('../../utils/smartbank-ops-store.js');
+          await syncWithBackend();
+
           showToast('Transfer dana berhasil diproses.', 'success');
           renderTellerUI();
         }
